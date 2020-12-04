@@ -67,7 +67,7 @@ class CheckpointConnector:
             self.restore(self.trainer.resume_from_checkpoint, on_gpu=self.trainer.on_gpu)
 
         # wait for all to catch up
-        self.trainer.accelerator_backend.barrier('TrainerIOMixin.restore_weights')
+        self.trainer.training_type_plugin.barrier('TrainerIOMixin.restore_weights')
 
         # clear cache after restore
         if self.trainer.on_gpu:
