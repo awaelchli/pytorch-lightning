@@ -17,6 +17,8 @@ from abc import ABC
 from argparse import ArgumentParser, Namespace
 from typing import List, Optional, Union, Type, TypeVar, cast
 
+from pytorch_lightning.accelerators.accelerator import NewAccelerator
+from pytorch_lightning.accelerators.accelerator_connector import BackendConnector
 from pytorch_lightning.callbacks import Callback, ProgressBarBase, ModelCheckpoint
 from pytorch_lightning.core.lightning import LightningModule
 from pytorch_lightning.trainer.connectors.checkpoint_connector import CheckpointConnector
@@ -26,7 +28,6 @@ from pytorch_lightning.trainer.states import TrainerState
 from pytorch_lightning.utilities import argparse_utils
 from pytorch_lightning.utilities.cloud_io import get_filesystem
 from pytorch_lightning.utilities.model_utils import is_overridden
-from pytorch_lightning.accelerators.accelerator import Accelerator
 from pytorch_lightning.loggers.base import LightningLoggerBase
 from pytorch_lightning.loggers.tensorboard import TensorBoardLogger
 
@@ -48,11 +49,73 @@ class TrainerProperties(ABC):
     _default_root_dir: str
     _weights_save_path: str
     default_root_path: str
-    accelerator_backend: Accelerator
+    accelerator_backend: NewAccelerator
+    accelerator_connector: BackendConnector
     logger: LightningLoggerBase
     model_connector: ModelConnector
     checkpoint_connector: CheckpointConnector
     callbacks: List[Callback]
+
+    @property
+    def accelerator(self):
+        return self.accelerator_connector.accelerator
+
+    @property
+    def accelerator_backend(self):
+        # for backward compatibility
+        return self.accelerator
+
+    @property
+    def training_type_plugin(self):
+        return self.accelerator.training_type_plugin
+
+    @property
+    def global_rank(self):
+        return self.accelerator.training_type_plugin.global_rank
+
+    @property
+    def local_rank(self):
+        # some training types define a local rank
+        return getattr(self.accelerator.training_type_plugin, "local_rank", 0)
+
+    @property
+    def world_size(self):
+        # some training types define a world size
+        return getattr(self.accelerator.training_type_plugin, "world_size", 1)
+
+    @property
+    def on_gpu(self):
+        return self.accelerator_connector.on_gpu
+
+    @property
+    def on_tpu(self):
+        return self.accelerator_connector.on_tpu
+
+    @property
+    def use_dp(self):
+        return self.accelerator_connector.use_dp
+
+    @property
+    def use_ddp(self):
+        return self.accelerator_connector.use_ddp
+
+    @property
+    def use_ddp2(self):
+        return self.accelerator_connector.use_ddp2
+
+    @property
+    def use_horovod(self):
+        return self.accelerator_connector.use_horovod
+
+    @property
+    def use_single_gpu(self):
+        return self.accelerator_connector.use_single_gpu
+
+    @property
+    def use_tpu(self):
+        # TODO update this, what is the difference between use_tpu and on_tpu?
+        return False
+        # return self.accelerator_connector.use_tpu
 
     @property
     def log_dir(self):
@@ -160,10 +223,7 @@ class TrainerProperties(ABC):
 
     @property
     def num_gpus(self) -> int:
-        gpus = self.data_parallel_device_ids
-        if gpus is None:
-            return 0
-        return len(gpus)
+        return self.accelerator_connector.num_gpus
 
     @property
     def data_parallel(self) -> bool:

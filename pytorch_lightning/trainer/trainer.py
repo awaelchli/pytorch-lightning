@@ -19,6 +19,7 @@ from typing import Dict, Iterable, List, Optional, Union
 import torch
 from torch.utils.data import DataLoader
 
+from pytorch_lightning.accelerators.accelerator_connector import BackendConnector
 from pytorch_lightning.callbacks import Callback, ModelCheckpoint
 from pytorch_lightning.core.datamodule import LightningDataModule
 from pytorch_lightning.core.lightning import LightningModule
@@ -40,7 +41,6 @@ from pytorch_lightning.utilities.debugging import InternalDebugger
 from pytorch_lightning.utilities.exceptions import MisconfigurationException
 from pytorch_lightning.trainer.evaluation_loop import EvaluationLoop
 from pytorch_lightning.trainer.training_loop import TrainLoop
-from pytorch_lightning.accelerators.accelerator_connector import AcceleratorConnector
 from pytorch_lightning.trainer.connectors.logger_connector import LoggerConnector
 from pytorch_lightning.trainer.connectors.optimizer_connector import OptimizerConnector
 from pytorch_lightning.trainer.connectors.training_trick_connector import TrainingTricksConnector
@@ -58,8 +58,7 @@ from pytorch_lightning.utilities.cloud_io import load as pl_load
 from pytorch_lightning.utilities.model_utils import is_overridden
 from pytorch_lightning.trainer.properties import TrainerProperties
 from pytorch_lightning.plugins.plugin_connector import PluginConnector
-from pytorch_lightning.accelerators.accelerator import Accelerator
-from pytorch_lightning.accelerators.cpu_accelerator import CPUAccelerator
+from pytorch_lightning.accelerators.accelerator import NewAccelerator
 
 # warnings to ignore in trainer
 warnings.filterwarnings(
@@ -113,7 +112,7 @@ class Trainer(
         val_check_interval: Union[int, float] = 1.0,
         flush_logs_every_n_steps: int = 100,
         log_every_n_steps: int = 50,
-        accelerator: Optional[Union[str, Accelerator]] = None,
+        accelerator: Optional[Union[str, NewAccelerator]] = None,
         sync_batchnorm: bool = False,
         precision: int = 32,
         weights_summary: Optional[str] = 'top',
@@ -280,7 +279,20 @@ class Trainer(
         self.config_validator = ConfigValidator(self)
         self.data_connector = DataConnector(self)
         self.optimizer_connector = OptimizerConnector(self)
-        self.accelerator_connector = AcceleratorConnector(self)
+        self.accelerator_connector = BackendConnector(
+            num_processes,
+            tpu_cores,
+            accelerator,
+            distributed_backend,
+            auto_select_gpus,
+            gpus,
+            num_nodes,
+            log_gpu_memory,
+            sync_batchnorm,
+            benchmark,
+            replace_sampler_ddp,
+            deterministic,
+        )
         self.logger_connector = LoggerConnector(self)
         self.model_connector = ModelConnector(self)
         self.precision_connector = PrecisionConnector(self)
@@ -291,7 +303,6 @@ class Trainer(
         self.checkpoint_connector = CheckpointConnector(self)
         self.slurm_connector = SLURMConnector(self)
         self.tuner = Tuner(self)
-        self.accelerator_backend = None
         self.evaluation_loop = EvaluationLoop(self)
         self.train_loop = TrainLoop(self)
         self.plugin_connector = PluginConnector(self)
@@ -330,20 +341,20 @@ class Trainer(
         )
 
         # init accelerator related flags
-        self.accelerator_connector.on_trainer_init(
-            num_processes,
-            tpu_cores,
-            accelerator,
-            distributed_backend,
-            auto_select_gpus,
-            gpus,
-            num_nodes,
-            log_gpu_memory,
-            sync_batchnorm,
-            benchmark,
-            replace_sampler_ddp,
-            deterministic,
-        )
+        # self.accelerator_connector.on_trainer_init(
+        #     num_processes,
+        #     tpu_cores,
+        #     accelerator,
+        #     distributed_backend,
+        #     auto_select_gpus,
+        #     gpus,
+        #     num_nodes,
+        #     log_gpu_memory,
+        #     sync_batchnorm,
+        #     benchmark,
+        #     replace_sampler_ddp,
+        #     deterministic,
+        # )
 
         # init train loop related flags
         self.train_loop.on_trainer_init(
@@ -425,16 +436,18 @@ class Trainer(
         # ----------------------------
         # SET UP TRAINING
         # ----------------------------
-        self.accelerator_backend = self.accelerator_connector.select_accelerator()
-        self.accelerator_backend.setup(model)
+        # self.accelerator_backend = self.accelerator_connector.select_accelerator()
+        self.accelerator_backend.setup(self, model)
 
         # ----------------------------
         # INSPECT THESE FOR MAIN LOOPS
         # ----------------------------
         # assign training and eval functions... inspect these to see the train and eval loops :)
-        self.accelerator_backend.train_loop = self.train
-        self.accelerator_backend.validation_loop = self.run_evaluation
-        self.accelerator_backend.test_loop = self.run_evaluation
+        # self.accelerator_backend.train_loop = self.train
+        # self.accelerator_backend.validation_loop = self.run_evaluation
+        # self.accelerator_backend.test_loop = self.run_evaluation
+        self.train_loop.setup_training(model)
+        self.train()
 
         # ----------------------------
         # TRAIN
