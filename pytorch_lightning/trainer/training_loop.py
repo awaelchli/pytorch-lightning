@@ -88,13 +88,6 @@ class TrainLoop:
         return False
 
     def on_train_start(self):
-        # clear cache before training
-        if self.trainer.on_gpu and self.trainer.root_gpu is not None:
-            # use context because of:
-            # https://discuss.pytorch.org/t/out-of-memory-when-i-use-torch-cuda-empty-cache/57898
-            with torch.cuda.device(f"cuda:{self.trainer.root_gpu}"):
-                torch.cuda.empty_cache()
-
         # hook
         self.trainer.call_hook("on_train_start")
 
