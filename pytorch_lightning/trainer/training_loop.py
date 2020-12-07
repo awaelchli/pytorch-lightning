@@ -459,7 +459,7 @@ class TrainLoop:
         with self.trainer.profiler.profile("optimizer_step"):
             # optimizer step lightningModule hook
             self.trainer.accelerator_backend.optimizer_step(
-                optimizer, batch_idx, opt_idx, train_step_and_backward_closure
+                optimizer, self.trainer.current_epoch, batch_idx, opt_idx, train_step_and_backward_closure
             )
 
     def on_before_zero_grad(self, optimizer):
