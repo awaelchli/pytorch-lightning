@@ -511,6 +511,8 @@ class Trainer(
         # ----------------------------
         # self.accelerator_backend = self.accelerator_connector.select_accelerator()
         self.accelerator_backend.setup(self, model)
+
+        # TODO: is calling pre-training the correct place here @justus?
         self.training_type_plugin.pre_training()
 
         # ----------------------------
@@ -534,6 +536,8 @@ class Trainer(
         else:
             results = self.train()
 
+        # TODO: is calling post training the correct place here @justus?
+        self.training_type_plugin.post_training()
         self.accelerator_backend.teardown()
 
         # ----------------------------
