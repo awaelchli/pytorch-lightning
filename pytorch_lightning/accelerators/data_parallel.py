@@ -53,7 +53,7 @@ class TrainingTypePlugin(Plugin, ABC):
 
     @property
     @abstractmethod
-    def root_device(self):
+    def root_device(self) -> torch.device:
         raise NotImplementedError
 
     @abstractmethod
@@ -139,7 +139,6 @@ class SingleDevicePlugin(TrainingTypePlugin):
     def connect(self, model: torch.nn.Module):
         self._model = model
         self.model_to_device()
-
         return self.model
 
     @property
@@ -180,7 +179,6 @@ class ParallelPlugin(TrainingTypePlugin, ABC):
 
     def connect(self, model):
         self.setup(model)
-
         return self.model
 
     @property
@@ -203,7 +201,7 @@ class DataParallelPlugin(ParallelPlugin):
 
     @property
     def root_device(self):
-        return self.parallel_device_ids[0]
+        return torch.device("cuda", self.parallel_device_ids[0])
 
     @property
     def lightning_module(self):
@@ -220,15 +218,28 @@ class DDPPlugin(ParallelPlugin):
 
     distributed_backend = "ddp"
 
-    def __init__(self, parallel_device_ids, logger=None, cluster_environment=None) -> None:
+    def __init__(
+            self,
+            parallel_device_ids,
+            num_nodes=1,
+            logger=None,
+            cluster_environment=None,
+            is_slurm_managing_tasks=False,
+            **kwargs: Dict[str, Any],
+    ) -> None:
         super().__init__(parallel_device_ids=parallel_device_ids, logger=logger, cluster_environment=cluster_environment)
-        self._has_spawned_children = False
         self.interactive_ddp_procs = []
         self.dist = LightningDistributed()
+        self.num_nodes = num_nodes
+        self.is_slurm_managing_tasks = is_slurm_managing_tasks
+        self._ddp_kwargs = kwargs
+        self._has_spawned_children = False
+        self.task_idx = None
+        self.num_processes = len(parallel_device_ids)
 
     @property
     def root_device(self):
-        return self.parallel_device_ids[self.local_rank]
+        return torch.device("cuda", self.parallel_device_ids[self.local_rank])
 
     def determine_local_rank(self):
         if self.is_slurm_managing_tasks:
@@ -243,7 +254,6 @@ class DDPPlugin(ParallelPlugin):
             return super().determine_node_rank()
 
     def setup(self, model):
-
         self._model = model
 
         # start the other scripts
@@ -302,7 +312,7 @@ class DDPPlugin(ParallelPlugin):
         if self.logger is not None:
             os.environ["PL_EXP_VERSION"] = str(self.logger.version)
 
-        num_gpus = len(self.data_parallel_device_ids)
+        num_gpus = len(self.parallel_device_ids)
         # TODO: Add num_nodes (pass it in?)
         os.environ["WORLD_SIZE"] = f"{num_gpus * self.num_nodes}"
 
@@ -354,7 +364,7 @@ class DDPPlugin(ParallelPlugin):
         )
 
     def determine_ddp_device_ids(self):
-        return [self.root_device]
+        return [self.root_device.index]
 
     def init_ddp_connection(self, global_rank: int, world_size: int) -> None:
         # TODO: From where to get cluster environment?
@@ -390,7 +400,7 @@ class DDPPlugin(ParallelPlugin):
         # try to init for 20 times at max in case ports are taken
         # where to store ip_table
         # TODO: CHeck is_slurm_managing_tasks
-        self.init_ddp_connection(self.global_rank, self.world_size, self.is_slurm_managing_tasks)
+        self.init_ddp_connection(self.global_rank, self.world_size)
 
         # TODO: Move this somewhere else
         # self.trainer.call_setup_hook(self.model)
@@ -401,6 +411,11 @@ class DDPPlugin(ParallelPlugin):
             log.info(f"distributed_backend={self.distributed_backend}")
             log.info(f"All DDP processes registered. Starting ddp with {self.world_size} processes")
             log.info("-" * 100)
+
+        # TODO: I moved this from training loop to here, is it the right place?
+        # set the ranks and devices
+        self.dist.rank = self.global_rank
+        self.dist.device = self.root_device
 
         self.model = self.configure_sync_batchnorm(self.model)
 
@@ -450,14 +465,11 @@ class DDPPlugin(ParallelPlugin):
         # TODO: Can we easily make this a property that falls back here?
         # self.trainer.root_gpu = self.trainer.data_parallel_device_ids[self.trainer.local_rank]
         torch.cuda.set_device(self.root_device)
-        self.model.cuda(self.root_device)
+        self.model.to(self.root_device)
 
-    def reduce(self, output, group: Optional[Any] = None,
-                    reduce_op: Optional[Union[ReduceOp, str]] = None):
-
+    def reduce(self, output, group: Optional[Any] = None, reduce_op: Optional[Union[ReduceOp, str]] = None):
         if isinstance(output, torch.Tensor):
             output = sync_ddp_if_available(output, group, reduce_op)
-        
         return output
 
 

@@ -114,13 +114,6 @@ class TrainLoop:
         # Setup??
         # --------------------------
         ref_model = model
-        if self.trainer.data_parallel:
-            ref_model = model.module
-
-        # set the ranks and devices
-        # TODO dist was a AttributeDict, should be moved to plugin?
-        # self.trainer.accelerator_backend.dist.rank = self.trainer.global_rank
-        # self.trainer.accelerator_backend.dist.device = ref_model.device
 
         # give model convenience properties
         ref_model.trainer = self.trainer

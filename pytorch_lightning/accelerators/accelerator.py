@@ -52,7 +52,7 @@ class NewAccelerator(object):
         pass
 
     def batch_to_device(self, batch: Any, device: torch.device):
-        model = self.model
+        model = self.lightning_module
         if model is not None:
             return model.transfer_batch_to_device(batch, device)
         return move_data_to_device(batch, device)

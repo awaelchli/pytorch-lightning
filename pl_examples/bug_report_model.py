@@ -1,31 +1,10 @@
-# Copyright The PyTorch Lightning team.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+from argparse import ArgumentParser
 
-# --------------------------------------------
-# --------------------------------------------
-# --------------------------------------------
-# USE THIS MODEL TO REPRODUCE A BUG YOU REPORT
-# --------------------------------------------
-# --------------------------------------------
-# --------------------------------------------
-import os
 import torch
-from torch.utils.data import Dataset
-from pytorch_lightning import Trainer, LightningModule
+import pytorch_lightning as pl
 
 
-class RandomDataset(Dataset):
+class RandomDataset(torch.utils.data.Dataset):
     def __init__(self, size, length):
         self.len = length
         self.data = torch.randn(length, size)
@@ -37,28 +16,26 @@ class RandomDataset(Dataset):
         return self.len
 
 
-class BoringModel(LightningModule):
-
+class BoringModel(pl.LightningModule):
     def __init__(self):
         """
         Testing PL Module
-
         Use as follows:
         - subclass
         - modify the behavior for what you want
-
         class TestModel(BaseTestModel):
             def training_step(...):
                 # do your own thing
-
         or:
-
         model = BaseTestModel()
         model.training_epoch_end = None
-
         """
         super().__init__()
         self.layer = torch.nn.Linear(32, 2)
+
+    @property
+    def automatic_optimization(self):
+        return True
 
     def forward(self, x):
         return self.layer(x)
@@ -68,7 +45,7 @@ class BoringModel(LightningModule):
         return torch.nn.functional.mse_loss(prediction, torch.ones_like(prediction))
 
     def step(self, x):
-        x = self.layer(x)
+        x = self(x)
         out = torch.nn.functional.mse_loss(x, torch.ones_like(x))
         return out
 
@@ -104,37 +81,23 @@ class BoringModel(LightningModule):
         lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1)
         return [optimizer], [lr_scheduler]
 
+    def train_dataloader(self):
+        return torch.utils.data.DataLoader(RandomDataset(32, 64))
 
-#  NOTE: If you are using a cmd line to run your script,
-#  provide the cmd line as below.
-#  opt = "--max_epochs 1 --limit_train_batches 1".split(" ")
-#  parser = ArgumentParser()
-#  args = parser.parse_args(opt)
+    def val_dataloader(self):
+        return torch.utils.data.DataLoader(RandomDataset(32, 64))
 
-def run_test():
-
-    class TestModel(BoringModel):
-
-        def on_train_epoch_start(self) -> None:
-            print('override any method to prove your bug')
-
-    # fake data
-    train_data = torch.utils.data.DataLoader(RandomDataset(32, 64))
-    val_data = torch.utils.data.DataLoader(RandomDataset(32, 64))
-    test_data = torch.utils.data.DataLoader(RandomDataset(32, 64))
-
-    # model
-    model = TestModel()
-    trainer = Trainer(
-        default_root_dir=os.getcwd(),
-        limit_train_batches=1,
-        limit_val_batches=1,
-        max_epochs=1,
-        weights_summary=None,
-    )
-    trainer.fit(model, train_data, val_data)
-    trainer.test(test_dataloaders=test_data)
+    def test_dataloader(self):
+        return torch.utils.data.DataLoader(RandomDataset(32, 64))
 
 
 if __name__ == '__main__':
-    run_test()
+    parser = ArgumentParser()
+    parser = pl.Trainer.add_argparse_args(parser)
+    parser.set_defaults(max_epochs=20)
+    args = parser.parse_args()
+
+    model = BoringModel()
+    trainer = pl.Trainer.from_argparse_args(parser)
+    trainer.fit(model, torch.utils.data.DataLoader(RandomDataset(32, 500)))
+    results = trainer.test(model, torch.utils.data.DataLoader(RandomDataset(32, 500)))
