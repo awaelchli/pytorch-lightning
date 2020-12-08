@@ -66,6 +66,11 @@ class TrainerProperties(ABC):
         return self.accelerator
 
     @property
+    def distributed_backend(self):
+        # for backward compatibility
+        return self.accelerator_connector.distributed_backend
+
+    @property
     def training_type_plugin(self):
         return self.accelerator.training_type_plugin
 
@@ -116,6 +121,14 @@ class TrainerProperties(ABC):
         # TODO update this, what is the difference between use_tpu and on_tpu?
         return False
         # return self.accelerator_connector.use_tpu
+
+    @property
+    def num_nodes(self):
+        return self.accelerator_connector.num_gpus
+
+    @property
+    def num_processes(self):
+        return self.accelerator_connector.num_processes
 
     @property
     def log_dir(self):
@@ -236,7 +249,7 @@ class TrainerProperties(ABC):
     @property
     def progress_bar_dict(self) -> dict:
         """ Read-only for progress bar metrics. """
-        ref_model = self.model if not self.data_parallel else self.model.module
+        ref_model = self.get_model()
         ref_model = cast(LightningModule, ref_model)
         return dict(**ref_model.get_progress_bar_dict(), **self.logger_connector.progress_bar_metrics)
 
@@ -248,7 +261,7 @@ class TrainerProperties(ABC):
     @property
     def enable_validation(self) -> bool:
         """ Check if we should run validation during training. """
-        model_ref = self.model_connector.get_model()
+        model_ref = self.get_model()
         val_loop_enabled = is_overridden('validation_step', model_ref) and self.limit_val_batches > 0
         return val_loop_enabled or self.fast_dev_run
 
@@ -290,7 +303,9 @@ class TrainerProperties(ABC):
         self.checkpoint_connector.save_checkpoint(filepath, weights_only)
 
     def get_model(self):
-        return self.model_connector.get_model()
+        # TODO: rename this to lightning_module (see training type plugin)
+        # backward compatible
+        return self.training_type_plugin.lightning_module
 
 
 # Used to represent the concrete type TrainerProperties class methods are called on.

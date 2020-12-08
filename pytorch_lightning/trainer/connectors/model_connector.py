@@ -49,8 +49,3 @@ class ModelConnector:
             # m.tpu_local_core_rank = self.trainer.tpu_local_core_rank
             # m.tpu_global_core_rank = self.trainer.tpu_global_core_rank
             m.precision = self.trainer.precision
-
-    def get_model(self):
-        is_dp_module = isinstance(self.trainer.model, (LightningDistributedDataParallel, LightningDataParallel))
-        model = self.trainer.model.module if is_dp_module else self.trainer.model
-        return model
