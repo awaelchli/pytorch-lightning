@@ -113,6 +113,14 @@ class TrainingTypePlugin(Plugin, ABC):
     def lightning_module(self):
         return self._model
 
+    def start_training(self, trainer):
+        # double dispatch to initiate the training loop
+        return trainer.train()
+
+    def start_testing(self, trainer):
+        # double dispatch to initiate the test loop
+        return trainer.run_test()
+
 
 class SingleDevicePlugin(TrainingTypePlugin):
     def __init__(self, device, logger=None):
@@ -501,13 +509,20 @@ class DDPSpawnPlugin(ParallelPlugin):
         self.global_rank = self.determine_node_rank() * self.num_processes + process_idx
         self.world_size = self.num_nodes * self.num_processes
 
-    def pre_training(self):
-        mp.spawn(self.new_process, nprocs=self.num_processes, args=(self.mp_queue, self.model, self.proc_offset,))
+    # def pre_training(self):
+
+
+    def start_training(self, trainer):
+        mp.spawn(self.new_process, nprocs=self.num_processes, args=(self.mp_queue, trainer, self.model, self.proc_offset,))
 
         print(self.global_rank, "I am still running", os.getpid(),
               "i will go into training loop and crash because i didn't enter process group")
+        return None
 
-    def new_process(self, process_idx, mp_queue, model, proc_offset):
+    def start_testing(self, trainer):
+        return trainer.run_test()
+
+    def new_process(self, process_idx, mp_queue, trainer, model, proc_offset):
         print("i am a new process", os.getpid())
         # TODO: check if needed
         # seed = os.environ.get("PL_GLOBAL_SEED")
@@ -571,6 +586,8 @@ class DDPSpawnPlugin(ParallelPlugin):
         self.configure_ddp()
 
         self.barrier()
+
+        trainer.train()
 
     def post_training(self, results, best_model_path):
         # get original model
