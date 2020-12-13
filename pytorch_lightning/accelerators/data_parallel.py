@@ -587,8 +587,8 @@ class DDPSpawnPlugin(ParallelPlugin):
         self.configure_ddp()
 
         self.barrier()
-        
-        print("self.model", self.model, type(self.model))
+
+        print("self.model", type(self.model), type(self.lightning_module))
 
         trainer.train()
 
