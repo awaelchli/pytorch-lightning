@@ -403,6 +403,7 @@ class DDPPlugin(ParallelPlugin):
             torch_distrib.init_process_group(torch_backend, rank=global_rank, world_size=world_size)
 
     def pre_training(self):
+        # TODO: check if needed
         seed = os.environ.get("PL_GLOBAL_SEED")
         if seed is not None:
             seed_everything(int(seed))
@@ -521,11 +522,10 @@ class DDPSpawnPlugin(ParallelPlugin):
         mp.spawn(self.new_process, nprocs=self.num_processes, args=(self.mp_queue, trainer, self.model, self.proc_offset,))
 
     def new_process(self, process_idx, mp_queue, trainer, model, proc_offset):
-        print("i am a new process", os.getpid())
         # TODO: check if needed
-        # seed = os.environ.get("PL_GLOBAL_SEED")
-        # if seed is not None:
-        #     seed_everything(int(seed))
+        seed = os.environ.get("PL_GLOBAL_SEED")
+        if seed is not None:
+            seed_everything(int(seed))
 
         process_idx = process_idx + proc_offset
         self.set_world_ranks(process_idx)
@@ -574,7 +574,6 @@ class DDPSpawnPlugin(ParallelPlugin):
         # clean up memory
         torch.cuda.empty_cache()
 
-        # if self.is_global_zero:
         # restore main state with best weights
         best_path = self.mp_queue.get()
         results = self.mp_queue.get()
@@ -582,7 +581,6 @@ class DDPSpawnPlugin(ParallelPlugin):
 
         # recover the weights of the processes trained in the children
         self.__recover_child_process_weights(best_path, last_path)
-
         return results
 
     def configure_ddp(self):

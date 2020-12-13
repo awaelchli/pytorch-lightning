@@ -474,8 +474,6 @@ class Trainer(
         # ----------------------------
         # self.accelerator_backend = self.accelerator_connector.select_accelerator()
         self.accelerator_backend.setup(self, model)
-
-        # TODO: is calling pre-training the correct place here @justus?
         self.training_type_plugin.pre_training()
 
         # ----------------------------
@@ -501,7 +499,6 @@ class Trainer(
         else:
             self.training_type_plugin.start_training(self)
 
-        # TODO: is calling post training the correct place here @justus?
         results = self.training_type_plugin.post_training(self.checkpoint_callback.best_model_path)
         self.accelerator_backend.teardown()
 
@@ -550,9 +547,9 @@ class Trainer(
             else:
                 raise MisconfigurationException("weights_summary can be None, " + ", ".join(ModelSummary.MODES))
 
+        # TODO: what the heck is this
         # track model now.
         # if cluster resets state, the model will update with the saved weights
-        # TODO: what the heck is this
         # self.trainer.model = model
 
         # restore training and model before hpc is called
