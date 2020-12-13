@@ -517,12 +517,8 @@ class DDPSpawnPlugin(ParallelPlugin):
     def start_training(self, trainer):
         mp.spawn(self.new_process, nprocs=self.num_processes, args=(self.mp_queue, trainer, self.model, self.proc_offset,))
 
-        print(self.global_rank, "I am still running", os.getpid(),
-              "i will go into training loop and crash because i didn't enter process group")
-        return None
-
     def start_testing(self, trainer):
-        return trainer.run_test()
+        mp.spawn(self.new_process, nprocs=self.num_processes, args=(self.mp_queue, trainer, self.model, self.proc_offset,))
 
     def new_process(self, process_idx, mp_queue, trainer, model, proc_offset):
         print("i am a new process", os.getpid())
@@ -595,28 +591,35 @@ class DDPSpawnPlugin(ParallelPlugin):
 
         print("self.model", type(self.model), type(self.lightning_module))
 
-        trainer.train()
+        if trainer.testing:
+            results = trainer.run_test()
+        else:
+            results = trainer.train()
+
+        self.transfer_distrib_spawn_state_on_fit_end(mp_queue, results)
 
     def post_training(self, results, best_model_path):
         # get original model
         # TODO: How To get this? is this simply self.model?
         # model = self.trainer.get_model()
-        model = self.model
+        # model = self.model
 
         # persist info in ddp_spawn
-        self.transfer_distrib_spawn_state_on_fit_end(model, self.mp_queue, results, best_model_path)
+        # self.transfer_distrib_spawn_state_on_fit_end(results, best_model_path)
 
         # clean up memory
         torch.cuda.empty_cache()
 
-        if self.process_idx == 0:
-            # restore main state with best weights
-            best_path = self.mp_queue.get()
-            results = self.mp_queue.get()
-            last_path = self.mp_queue.get()
+        # if self.is_global_zero:
+        # restore main state with best weights
+        best_path = self.mp_queue.get()
+        results = self.mp_queue.get()
+        last_path = self.mp_queue.get()
 
-            # recover the weights of the processes trained in the children
-            self.__recover_child_process_weights(model, best_path, last_path)
+        # recover the weights of the processes trained in the children
+        self.__recover_child_process_weights(best_path, last_path)
+
+        return results
 
     def configure_ddp(self):
         # if unset, default `find_unused_parameters` `True`
@@ -641,7 +644,7 @@ class DDPSpawnPlugin(ParallelPlugin):
     def determine_ddp_device_ids(self):
         return [self.root_device]
 
-    def transfer_distrib_spawn_state_on_fit_end(self, model, results, best_model_path=None):
+    def transfer_distrib_spawn_state_on_fit_end(self, results, best_model_path=None):
 
         if self.global_rank == 0 and self.mp_queue is not None:
             rank_zero_warn('cleaning up ddp environment...')
@@ -658,19 +661,18 @@ class DDPSpawnPlugin(ParallelPlugin):
                 atomic_save(self.model.state_dict(), last_path)
             self.mp_queue.put(last_path)
 
-
-    def __recover_child_process_weights(self, model, best_path, last_path):
-        # TODO: Where can we set this?
+    def __recover_child_process_weights(self, best_path, last_path):
+        # TODO: is there a better way than accessing callback through model -> trainer -> callback?
         # transfer back the best path to the trainer
-        # if self.trainer.checkpoint_callback:
-        #     self.trainer.checkpoint_callback.best_model_path = best_path
+        if self.lightning_module.trainer.checkpoint_callback:
+            self.lightning_module.trainer.checkpoint_callback.best_model_path = best_path
         # todo, pass also best score
 
         # load last weights
         # TODO: How to get self.trainer.testing?
         if last_path is not None: # and not self.trainer.testing:
             ckpt = pl_load(last_path, map_location=lambda storage, loc: storage)
-            model.load_state_dict(ckpt)
+            self.lightning_module.load_state_dict(ckpt)
 
         # TODO: Where to set this?
         # Do we really need to set this or can we just make the trainer property forward our current property here?
@@ -704,4 +706,5 @@ class DDPSpawnPlugin(ParallelPlugin):
             output = sync_ddp_if_available(output, group, reduce_op)
         return output
 
-# STILL MISSING: DDP2 (?), HOROVOD DDP AND HPC DDP
+
+# TODO: DDP2 (?), HOROVOD DDP AND HPC DDP

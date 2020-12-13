@@ -496,15 +496,13 @@ class Trainer(
         self.call_hook("on_fit_start")
 
         # double dispatch: let the plugin initiate the training/test loop.
-        # if self.testing:
-        #     results = self.training_type_plugin.start_testing(self)
-        #     # results = self.run_test()
-        # else:
-        results = self.training_type_plugin.start_training(self)
-            # results = self.train()
+        if self.testing:
+            self.training_type_plugin.start_testing(self)
+        else:
+            self.training_type_plugin.start_training(self)
 
         # TODO: is calling post training the correct place here @justus?
-        self.training_type_plugin.post_training(results, self.checkpoint_callback.best_model_path)
+        results = self.training_type_plugin.post_training(self.checkpoint_callback.best_model_path)
         self.accelerator_backend.teardown()
 
         # ----------------------------
