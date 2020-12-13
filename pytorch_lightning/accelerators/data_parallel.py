@@ -442,7 +442,7 @@ class DDPPlugin(ParallelPlugin):
 
         self.barrier()
 
-    def post_training(self, results, best_model_path):
+    def post_training(self, best_model_path):
         torch.cuda.empty_cache()
 
         if "WORLD_SIZE" in os.environ:
@@ -598,7 +598,7 @@ class DDPSpawnPlugin(ParallelPlugin):
 
         self.transfer_distrib_spawn_state_on_fit_end(mp_queue, results)
 
-    def post_training(self, results, best_model_path):
+    def post_training(self, best_model_path):
         # get original model
         # TODO: How To get this? is this simply self.model?
         # model = self.trainer.get_model()
