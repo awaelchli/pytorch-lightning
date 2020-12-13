@@ -41,10 +41,9 @@ else:
 
 
 class TrainingTypePlugin(Plugin, ABC):
-    def __init__(self, logger=None):
+    def __init__(self):
         self._model = None
         self.global_rank = 0
-        self.logger = logger
 
     @property
     @abstractmethod
@@ -123,8 +122,8 @@ class TrainingTypePlugin(Plugin, ABC):
 
 
 class SingleDevicePlugin(TrainingTypePlugin):
-    def __init__(self, device, logger=None):
-        super().__init__(logger=logger)
+    def __init__(self, device):
+        super().__init__()
         self.device: torch.device = device
 
     @property
@@ -161,8 +160,8 @@ class SingleDevicePlugin(TrainingTypePlugin):
 
 
 class ParallelPlugin(TrainingTypePlugin, ABC):
-    def __init__(self, parallel_device_ids, logger=None, cluster_environment=None):
-        super().__init__(logger=logger)
+    def __init__(self, parallel_device_ids, cluster_environment=None):
+        super().__init__()
         self.parallel_device_ids = parallel_device_ids
         self.local_rank = 0
         self.world_size = 1
@@ -247,16 +246,15 @@ class DDPPlugin(ParallelPlugin):
             self,
             parallel_device_ids,
             num_nodes=1,
-            logger=None,
             cluster_environment=None,
             is_slurm_managing_tasks=False,
             **kwargs: Dict[str, Any],
     ) -> None:
-        super().__init__(parallel_device_ids=parallel_device_ids, logger=logger, cluster_environment=cluster_environment)
+        super().__init__(parallel_device_ids=parallel_device_ids, cluster_environment=cluster_environment)
         self.interactive_ddp_procs = []
-        self.dist = LightningDistributed()
         self.num_nodes = num_nodes
         self.is_slurm_managing_tasks = is_slurm_managing_tasks
+        self.dist = LightningDistributed()
         self._ddp_kwargs = kwargs
         self._has_spawned_children = False
         self.task_idx = None
@@ -290,7 +288,8 @@ class DDPPlugin(ParallelPlugin):
 
     @property
     def lightning_module(self):
-        return self._model.module
+        # the model may not be wrapped with DistributedDataParallel if calling this too early
+        return getattr(self._model, "module", self._model)
 
     def _call_children_scripts(self):
 
@@ -334,8 +333,8 @@ class DDPPlugin(ParallelPlugin):
         os.environ["PL_TRAINER_GPUS"] = ",".join([str(i) for i in self.parallel_device_ids])
         os.environ["PL_IN_DDP_SUBPROCESS"] = "1"
 
-        if self.logger is not None:
-            os.environ["PL_EXP_VERSION"] = str(self.logger.version)
+        if self.lightning_module.logger is not None:
+            os.environ["PL_EXP_VERSION"] = str(self.lightning_module.logger.version)
 
         num_gpus = len(self.parallel_device_ids)
         # TODO: Add num_nodes (pass it in?)
@@ -476,13 +475,12 @@ class DDPSpawnPlugin(ParallelPlugin):
         self,
         parallel_device_ids,
         num_nodes=1,
-        logger=None,
         cluster_environment=None,
         is_slurm_managing_tasks=False,
         proc_offset=0,
         **kwargs: Dict[str, Any]
     ):
-        super().__init__(parallel_device_ids=parallel_device_ids, logger=logger, cluster_environment=cluster_environment)
+        super().__init__(parallel_device_ids=parallel_device_ids, cluster_environment=cluster_environment)
         self.num_nodes = num_nodes
         self.is_slurm_managing_tasks = is_slurm_managing_tasks
         self.proc_offset = proc_offset
