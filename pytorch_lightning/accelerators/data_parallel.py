@@ -596,7 +596,7 @@ class DDPSpawnPlugin(ParallelPlugin):
         else:
             results = trainer.train()
 
-        self.transfer_distrib_spawn_state_on_fit_end(mp_queue, results)
+        self.transfer_distrib_spawn_state_on_fit_end(results)
 
     def post_training(self, best_model_path):
         # get original model
@@ -644,7 +644,9 @@ class DDPSpawnPlugin(ParallelPlugin):
     def determine_ddp_device_ids(self):
         return [self.root_device]
 
-    def transfer_distrib_spawn_state_on_fit_end(self, results, best_model_path=None):
+    def transfer_distrib_spawn_state_on_fit_end(self, results):
+        # TODO: is there a better way than accessing callback through model -> trainer -> callback?
+        best_model_path = self.lightning_module.trainer.checkpoint_callback.best_model_path
 
         if self.global_rank == 0 and self.mp_queue is not None:
             rank_zero_warn('cleaning up ddp environment...')
