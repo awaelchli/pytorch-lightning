@@ -494,6 +494,10 @@ class DDPSpawnPlugin(ParallelPlugin):
     def root_device(self):
         return torch.device("cuda", self.parallel_device_ids[self.local_rank])
 
+    @property
+    def lightning_module(self):
+        return self._model.module
+
     def setup(self, model):
         self._model = model
 
