@@ -527,30 +527,7 @@ class DDPSpawnPlugin(ParallelPlugin):
         # if seed is not None:
         #     seed_everything(int(seed))
 
-        # # TODO: Check if current process can be used as one training proc
-        #     No because torch.multiprocessing does not support the fork method in combination with cuda
-        # # start from one since current process is proc 0
-        # for proc_idx in range(1, self.num_processes):
-        #     # use os.fork, since this enables us to continue from here
-        #     # instead of spawning with separate function
-        #     pid = os.fork()
-        #
-        #     # set in child processes (PID=0). All previous child processes
-        #     # should already have their process_idx assigned
-        #     if pid == 0 and self.process_idx is None:
-        #         self.process_idx = proc_idx + self.proc_offset
-        #
-        # # set process idx for current process
-        # if pid != 0:
-        #     self.process_idx = 0 + self.proc_offset
-
-        # TODO: Check where to put that since we don't have access to the pbar here
-        # show progressbar only on progress_rank 0
-        # if (self.trainer.node_rank != 0 or self.process_idx != 0) and self.trainer.progress_bar_callback is not None:
-        #     self.trainer.progress_bar_callback.disable()
-
         process_idx = process_idx + proc_offset
-
         self.set_world_ranks(process_idx)
 
         # set warning rank
@@ -581,32 +558,19 @@ class DDPSpawnPlugin(ParallelPlugin):
         # move the model to the correct device
         self.model_to_device()
 
-        # TODO: Check where this can be moved
-        # set model properties before going into wrapper
-        # self.trainer.model_connector.copy_trainer_model_properties(self.model)
-
         self.configure_ddp()
 
         self.barrier()
-
-        print("self.model", type(self.model), type(self.lightning_module))
 
         if trainer.testing:
             results = trainer.run_test()
         else:
             results = trainer.train()
 
+        # persist info in ddp_spawn
         self.transfer_distrib_spawn_state_on_fit_end(results)
 
     def post_training(self, best_model_path):
-        # get original model
-        # TODO: How To get this? is this simply self.model?
-        # model = self.trainer.get_model()
-        # model = self.model
-
-        # persist info in ddp_spawn
-        # self.transfer_distrib_spawn_state_on_fit_end(results, best_model_path)
-
         # clean up memory
         torch.cuda.empty_cache()
 
@@ -656,9 +620,8 @@ class DDPSpawnPlugin(ParallelPlugin):
 
             # save the last weights
             last_path = None
-            # TODO: From where to get self.trainer.testing?
-            # if not self.trainer.testing and best_model_path is not None and len(best_model_path) > 0:
-            if best_model_path is not None and len(best_model_path) > 0:
+            # TODO: is there a better way than accessing trainer through model -> trainer?
+            if not self.lightning_module.trainer.testing and best_model_path is not None and len(best_model_path) > 0:
                 last_path = re.sub('.ckpt', '.tmp_end.ckpt', best_model_path)
                 atomic_save(self.lightning_module.state_dict(), last_path)
             self.mp_queue.put(last_path)
@@ -675,10 +638,6 @@ class DDPSpawnPlugin(ParallelPlugin):
         if last_path is not None: # and not self.trainer.testing:
             ckpt = pl_load(last_path, map_location=lambda storage, loc: storage)
             self.lightning_module.load_state_dict(ckpt)
-
-        # TODO: Where to set this?
-        # Do we really need to set this or can we just make the trainer property forward our current property here?
-        # self.trainer.model = model
 
     def determine_local_rank(self):
         if self.is_slurm_managing_tasks:
