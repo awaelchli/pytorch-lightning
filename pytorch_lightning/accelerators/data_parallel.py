@@ -674,7 +674,7 @@ class DDPSpawnPlugin(ParallelPlugin):
         # TODO: How to get self.trainer.testing?
         if last_path is not None: # and not self.trainer.testing:
             ckpt = pl_load(last_path, map_location=lambda storage, loc: storage)
-            self.lightning_module.load_state_dict(ckpt)
+            self.model.load_state_dict(ckpt)
 
         # TODO: Where to set this?
         # Do we really need to set this or can we just make the trainer property forward our current property here?
