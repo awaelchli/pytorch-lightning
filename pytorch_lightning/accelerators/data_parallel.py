@@ -660,7 +660,7 @@ class DDPSpawnPlugin(ParallelPlugin):
             # if not self.trainer.testing and best_model_path is not None and len(best_model_path) > 0:
             if best_model_path is not None and len(best_model_path) > 0:
                 last_path = re.sub('.ckpt', '.tmp_end.ckpt', best_model_path)
-                atomic_save(self.model.state_dict(), last_path)
+                atomic_save(self.lightning_module.state_dict(), last_path)
             self.mp_queue.put(last_path)
 
     def __recover_child_process_weights(self, best_path, last_path):
@@ -674,7 +674,7 @@ class DDPSpawnPlugin(ParallelPlugin):
         # TODO: How to get self.trainer.testing?
         if last_path is not None: # and not self.trainer.testing:
             ckpt = pl_load(last_path, map_location=lambda storage, loc: storage)
-            self.model.load_state_dict(ckpt)
+            self.lightning_module.load_state_dict(ckpt)
 
         # TODO: Where to set this?
         # Do we really need to set this or can we just make the trainer property forward our current property here?
