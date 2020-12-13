@@ -587,6 +587,8 @@ class DDPSpawnPlugin(ParallelPlugin):
         self.configure_ddp()
 
         self.barrier()
+        
+        print("self.model", self.model, type(self.model))
 
         trainer.train()
 
