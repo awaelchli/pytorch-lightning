@@ -527,9 +527,6 @@ class Trainer(
         # register auto-resubmit when on SLURM
         self.slurm_connector.register_slurm_signal_handlers()
 
-        if not self.is_global_zero and self.progress_bar_callback is not None:
-            self.progress_bar_callback.disable()
-
         # --------------------------
         # Pre-train
         # --------------------------
@@ -562,6 +559,9 @@ class Trainer(
 
     def train(self):
         self.pre_training_routine()
+
+        if not self.is_global_zero and self.progress_bar_callback is not None:
+            self.progress_bar_callback.disable()
 
         self.run_sanity_check(self.get_model())
 
@@ -734,6 +734,9 @@ class Trainer(
         return eval_loop_results, deprecated_eval_results
 
     def run_test(self):
+        if not self.is_global_zero and self.progress_bar_callback is not None:
+            self.progress_bar_callback.disable()
+
         # only load test dataloader for testing
         # self.reset_test_dataloader(ref_model)
         eval_loop_results, _ = self.run_evaluation(test_mode=True)
