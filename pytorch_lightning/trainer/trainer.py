@@ -492,6 +492,7 @@ class Trainer(
         # TRAIN
         # ----------------------------
         # hook
+
         self.call_hook("on_fit_start")
 
         # double dispatch: let the plugin initiate the training/test loop.

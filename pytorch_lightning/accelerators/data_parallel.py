@@ -496,7 +496,8 @@ class DDPSpawnPlugin(ParallelPlugin):
 
     @property
     def lightning_module(self):
-        return self._model.module
+        # the model may not be wrapped with DistributedDataParallel if calling this too early
+        return getattr(self._model, "module", self._model)
 
     def setup(self, model):
         self._model = model
