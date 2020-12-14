@@ -29,8 +29,10 @@ from pytorch_lightning.utilities.model_helpers import is_overridden
 
 
 class LoggerConnector:
-    def __init__(self, trainer):
+
+    def __init__(self, trainer, log_gpu_memory):
         self.trainer = trainer
+        self.log_gpu_memory = log_gpu_memory
         self.callback_metrics = {}
         self.evaluation_callback_metrics = {}
         self.logged_metrics = {}
@@ -173,8 +175,8 @@ class LoggerConnector:
                 and global_step for the rest.
         """
         # add gpu memory
-        if self.trainer.on_gpu and self.trainer.log_gpu_memory:
-            mem_map = memory.get_memory_profile(self.trainer.log_gpu_memory)
+        if self.trainer.on_gpu and self.log_gpu_memory:
+            mem_map = memory.get_memory_profile(self.log_gpu_memory)
             metrics.update(mem_map)
 
         # add norms
