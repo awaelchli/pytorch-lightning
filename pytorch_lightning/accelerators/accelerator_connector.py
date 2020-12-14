@@ -18,7 +18,8 @@ import os
 import torch
 
 from pytorch_lightning.accelerators.accelerator import NewCPUAccelerator, NewAccelerator, NewGPUAccelerator
-from pytorch_lightning.accelerators.data_parallel import SingleDevicePlugin, DDPPlugin, DDPSpawnPlugin
+from pytorch_lightning.accelerators.data_parallel import SingleDevicePlugin, DDPPlugin, DDPSpawnPlugin, \
+    DataParallelPlugin
 from pytorch_lightning.accelerators.precision import ApexMixedPrecisionPlugin, NativeMixedPrecisionPlugin, PrecisionPlugin
 from pytorch_lightning.utilities import AMPType, APEX_AVAILABLE, NATIVE_AMP_AVALAIBLE, device_parser
 from pytorch_lightning.utilities import rank_zero_only
@@ -190,7 +191,9 @@ class BackendConnector(object):
             raise NotImplementedError('We only support precisions 32 and 16!')
 
     def select_training_type_plugin(self):
-        if self.distributed_backend == "ddp":
+        if self.use_dp and self.distributed_backend == "dp":
+            plugin = DataParallelPlugin(parallel_devices=self.parallel_devices)
+        elif self.use_ddp and self.distributed_backend == "ddp":
             plugin = DDPPlugin(
                 parallel_devices=self.parallel_devices,
                 num_nodes=self.num_nodes,
