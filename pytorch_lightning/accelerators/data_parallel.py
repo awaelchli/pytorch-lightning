@@ -653,7 +653,8 @@ class DDPSpawnPlugin(ParallelPlugin):
         return self.dist.broadcast(obj)
 
     def model_to_device(self):
-        torch.cuda.set_device(self.root_device)
+        if self.root_device.type == "cuda":
+            torch.cuda.set_device(self.root_device)
         self.model.to(self.root_device)
 
     def reduce(self, output, group: Optional[Any] = None, reduce_op: Optional[Union[ReduceOp, str]] = None):
