@@ -386,6 +386,8 @@ class DDPPlugin(ParallelPlugin):
         )
 
     def determine_ddp_device_ids(self):
+        if self.root_device.type == "cpu":
+            return None
         return [self.root_device.index]
 
     def init_ddp_connection(self, global_rank: int, world_size: int) -> None:
@@ -600,7 +602,9 @@ class DDPSpawnPlugin(ParallelPlugin):
             torch_distrib.init_process_group(torch_backend, rank=global_rank, world_size=world_size)
 
     def determine_ddp_device_ids(self):
-        return [self.root_device]
+        if self.root_device.type == "cpu":
+            return None
+        return [self.root_device.index]
 
     def transfer_distrib_spawn_state_on_fit_end(self, results):
         # TODO: is there a better way than accessing callback through model -> trainer -> callback?
