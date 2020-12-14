@@ -289,8 +289,6 @@ class BackendConnector(object):
                     "You requested one or more GPUs, but set the backend to `ddp_cpu`. Training will not use GPUs."
                 )
             self.use_ddp = True
-            self.data_parallel_device_ids = None
-            self.on_gpu = False
 
         # HOROVOD
         elif self.distributed_backend == "horovod":

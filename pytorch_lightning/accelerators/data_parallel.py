@@ -330,7 +330,7 @@ class DDPPlugin(ParallelPlugin):
         if self.parallel_devices is None:
             raise MisconfigurationException("you selected (distribute_backend = ddp) but did not set Trainer(gpus=?)")
 
-        os.environ["PL_TRAINER_GPUS"] = ",".join([str(i) for i in self.parallel_devices])
+        os.environ["PL_TRAINER_GPUS"] = ",".join([str(device.index) for device in self.parallel_devices])
         os.environ["PL_IN_DDP_SUBPROCESS"] = "1"
 
         if self.lightning_module.logger is not None:
