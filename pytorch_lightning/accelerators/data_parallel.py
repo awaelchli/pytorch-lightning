@@ -178,7 +178,7 @@ class ParallelPlugin(TrainingTypePlugin, ABC):
 
     @property
     def on_gpu(self):
-        return any(d.type == "cuda" for d in self.parallel_devices) and torch.cuda.is_available()
+        return self.root_device.type == "cuda" and torch.cuda.is_available()
 
     @abstractmethod
     def setup(self, model):
@@ -225,7 +225,7 @@ class DataParallelPlugin(ParallelPlugin):
 
     @property
     def root_device(self):
-        return torch.device("cuda", self.parallel_devices[0])
+        return self.parallel_devices[0]
 
     @property
     def lightning_module(self):
