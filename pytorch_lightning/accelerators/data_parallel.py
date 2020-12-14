@@ -86,7 +86,6 @@ class TrainingTypePlugin(Plugin, ABC):
         return int(os.environ.get('LOCAL_RANK', 0))
 
     def determine_node_rank(self):
-
         # torchelastic uses the envvar GROUP_RANK, whereas other systems(?) use NODE_RANK.
         # otherwise use given node rank or default to node rank 0
         env_vars = ['NODE_RANK', 'GROUP_RANK']
@@ -211,6 +210,7 @@ class ParallelPlugin(TrainingTypePlugin, ABC):
 
 
 class DataParallelPlugin(ParallelPlugin):
+
     def setup(self, model):
         self._model = LightningDataParallel(model, self.parallel_devices)
 
@@ -230,6 +230,10 @@ class DataParallelPlugin(ParallelPlugin):
     @property
     def lightning_module(self):
         return self._model.module
+
+    def model_to_device(self):
+        # no need to do anything when model is wrapped in torch.nn.DataParallel
+        pass
 
     def barrier(self, *args, **kwargs):
         pass
