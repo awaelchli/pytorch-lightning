@@ -101,9 +101,7 @@ def run_test():
     model = TestModel()
     trainer = Trainer(
         default_root_dir=os.getcwd(),
-        limit_train_batches=1,
-        limit_val_batches=1,
-        max_epochs=1,
+        max_epochs=20,
         weights_summary=None,
         gpus=2,
         accelerator="ddp",
