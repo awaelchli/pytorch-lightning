@@ -141,7 +141,7 @@ def run_test():
 
     # fake data
     dataset = RandomDataset(32, 64)
-    batch_sampler = BatchSampler(SequentialSampler(len(dataset)), batch_size=4, drop_last=True)
+    batch_sampler = BatchSampler(SequentialSampler(range(len(dataset))), batch_size=4, drop_last=True)
     batch_sampler2 = IterationBasedBatchSampler(batch_sampler, num_iterations=2)
     train_data = torch.utils.data.DataLoader(dataset, batch_sampler=batch_sampler2)
 
