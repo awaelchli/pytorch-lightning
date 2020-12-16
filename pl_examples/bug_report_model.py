@@ -151,7 +151,8 @@ def run_test():
         max_epochs=1,
         weights_summary=None,
         gpus=2,
-        accelerator="ddp"
+        accelerator="ddp",
+        replace_sampler_ddp=False,
     )
     trainer.fit(model, train_data)
 
