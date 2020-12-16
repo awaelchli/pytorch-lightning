@@ -1,7 +1,10 @@
+import os
 import torch
-import pytorch_lightning as pl
+from torch.utils.data import Dataset
+from pytorch_lightning import Trainer, LightningModule
 
-class RandomDataset(torch.utils.data.Dataset):
+
+class RandomDataset(Dataset):
     def __init__(self, size, length):
         self.len = length
         self.data = torch.randn(length, size)
@@ -13,25 +16,20 @@ class RandomDataset(torch.utils.data.Dataset):
         return self.len
 
 
-class BoringModel(pl.LightningModule):
+class BoringModel(LightningModule):
 
     def __init__(self):
         """
         Testing PL Module
-
         Use as follows:
         - subclass
         - modify the behavior for what you want
-
         class TestModel(BaseTestModel):
             def training_step(...):
                 # do your own thing
-
         or:
-
         model = BaseTestModel()
         model.training_epoch_end = None
-
         """
         super().__init__()
         self.layer = torch.nn.Linear(32, 2)
@@ -44,7 +42,7 @@ class BoringModel(pl.LightningModule):
         return torch.nn.functional.mse_loss(prediction, torch.ones_like(prediction))
 
     def step(self, x):
-        x = self(x)
+        x = self.layer(x)
         out = torch.nn.functional.mse_loss(x, torch.ones_like(x))
         return out
 
@@ -80,14 +78,40 @@ class BoringModel(pl.LightningModule):
         lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1)
         return [optimizer], [lr_scheduler]
 
-    def train_dataloader(self):
-        return torch.utils.data.DataLoader(RandomDataset(32, 64))
 
-    def val_dataloader(self):
-        return torch.utils.data.DataLoader(RandomDataset(32, 64))
+#  NOTE: If you are using a cmd line to run your script,
+#  provide the cmd line as below.
+#  opt = "--max_epochs 1 --limit_train_batches 1".split(" ")
+#  parser = ArgumentParser()
+#  args = parser.parse_args(opt)
 
-    def test_dataloader(self):
-        return torch.utils.data.DataLoader(RandomDataset(32, 64))
+def run_test():
+
+    class TestModel(BoringModel):
+
+        def on_train_epoch_start(self) -> None:
+            print('override any method to prove your bug')
+
+    # fake data
+    train_data = torch.utils.data.DataLoader(RandomDataset(32, 64))
+    val_data = torch.utils.data.DataLoader(RandomDataset(32, 64))
+    test_data = torch.utils.data.DataLoader(RandomDataset(32, 64))
+
+    # model
+    model = TestModel()
+    trainer = Trainer(
+        default_root_dir=os.getcwd(),
+        limit_train_batches=1,
+        limit_val_batches=1,
+        max_epochs=1,
+        weights_summary=None,
+        gpus=2,
+        accelerator="ddp",
+        auto_select_gpus=True,
+    )
+    trainer.fit(model, train_data, val_data)
+    trainer.test(test_dataloaders=test_data)
+
 
 if __name__ == '__main__':
-    pl.Trainer(gpus=None, max_epochs=20).fit(BoringModel(), torch.utils.data.DataLoader(RandomDataset(32, 500)))
+    run_test()
