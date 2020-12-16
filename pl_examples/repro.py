@@ -103,7 +103,7 @@ def run_test():
         default_root_dir=os.getcwd(),
         weights_summary=None,
         gpus=None,
-        accelerator="ddp",
+        #accelerator="ddp",
         auto_select_gpus=True,
     )
     trainer.fit(model, train_data, val_data)
