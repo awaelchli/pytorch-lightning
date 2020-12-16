@@ -101,14 +101,13 @@ def run_test():
     model = TestModel()
     trainer = Trainer(
         default_root_dir=os.getcwd(),
-        max_epochs=20,
         weights_summary=None,
         gpus=2,
         accelerator="ddp",
         auto_select_gpus=True,
     )
     trainer.fit(model, train_data, val_data)
-    trainer.test(test_dataloaders=test_data)
+    # trainer.test(test_dataloaders=test_data)
 
 
 if __name__ == '__main__':
