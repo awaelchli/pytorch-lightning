@@ -131,7 +131,7 @@ def run_test():
         weights_summary=None,
         gpus=2,
         accelerator="ddp",
-        replace_sampler_ddp=False,
+        replace_sampler_ddp=False,  # <--- set this
     )
     trainer.fit(model, train_data)
 
