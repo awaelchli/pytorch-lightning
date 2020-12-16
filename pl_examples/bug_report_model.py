@@ -145,10 +145,10 @@ def run_test():
     batch_sampler2 = IterationBasedBatchSampler(batch_sampler, num_iterations=2)
     train_data = torch.utils.data.DataLoader(dataset, batch_sampler=batch_sampler2)
 
-    print(next(dataset))
-    print(next(dataset))
-    print(next(dataset))
-    print(next(dataset))
+    print(next(iter(dataset)))
+    print(next(iter(dataset)))
+    print(next(iter(dataset)))
+    print(next(iter(dataset)))
 
     # model
     model = TestModel()
