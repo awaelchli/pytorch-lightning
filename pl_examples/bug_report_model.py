@@ -1,24 +1,3 @@
-# Copyright The PyTorch Lightning team.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-# --------------------------------------------
-# --------------------------------------------
-# --------------------------------------------
-# USE THIS MODEL TO REPRODUCE A BUG YOU REPORT
-# --------------------------------------------
-# --------------------------------------------
-# --------------------------------------------
 import os
 import torch
 from torch.utils.data import Dataset, SequentialSampler, BatchSampler
@@ -132,23 +111,20 @@ class IterationBasedBatchSampler:
 
     def __len__(self):
         return self.num_iterations
+
+
 def run_test():
-
-    class TestModel(BoringModel):
-
-        def on_train_epoch_start(self) -> None:
-            print('override any method to prove your bug')
 
     # fake data
     dataset = RandomDataset(32, 64)
+
+    # here we may want to use DistributedSampler!
     batch_sampler = BatchSampler(SequentialSampler(range(len(dataset))), batch_size=4, drop_last=True)
     batch_sampler2 = IterationBasedBatchSampler(batch_sampler, num_iterations=10)
     train_data = torch.utils.data.DataLoader(dataset, batch_sampler=batch_sampler2)
 
-    print(next(iter(dataset)).shape)
-
     # model
-    model = TestModel()
+    model = BoringModel()
     trainer = Trainer(
         default_root_dir=os.getcwd(),
         max_epochs=1,
