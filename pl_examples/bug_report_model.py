@@ -140,9 +140,10 @@ def run_test():
             print('override any method to prove your bug')
 
     # fake data
-    batch_sampler = BatchSampler(SequentialSampler(range(10)), batch_size=4, drop_last=True)
+    dataset = RandomDataset(32, 64)
+    batch_sampler = BatchSampler(SequentialSampler(len(dataset)), batch_size=4, drop_last=True)
     batch_sampler2 = IterationBasedBatchSampler(batch_sampler, num_iterations=2)
-    train_data = torch.utils.data.DataLoader(RandomDataset(32, 64), batch_sampler=batch_sampler2)
+    train_data = torch.utils.data.DataLoader(dataset, batch_sampler=batch_sampler2)
 
     # model
     model = TestModel()
