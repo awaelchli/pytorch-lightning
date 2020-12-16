@@ -102,7 +102,7 @@ def run_test():
     trainer = Trainer(
         default_root_dir=os.getcwd(),
         weights_summary=None,
-        gpus=2,
+        gpus=None,
         accelerator="ddp",
         auto_select_gpus=True,
     )
