@@ -21,7 +21,7 @@
 # --------------------------------------------
 import os
 import torch
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, SequentialSampler, BatchSampler
 from pytorch_lightning import Trainer, LightningModule
 
 
@@ -105,12 +105,33 @@ class BoringModel(LightningModule):
         return [optimizer], [lr_scheduler]
 
 
-#  NOTE: If you are using a cmd line to run your script,
-#  provide the cmd line as below.
-#  opt = "--max_epochs 1 --limit_train_batches 1".split(" ")
-#  parser = ArgumentParser()
-#  args = parser.parse_args(opt)
+class IterationBasedBatchSampler:
+    """
+    Wraps a BatchSampler, resampling from it until
+    a specified number of iterations have been sampled
+    """
 
+    def __init__(self, batch_sampler, num_iterations, start_iter=0):
+        self.batch_sampler = batch_sampler
+        self.num_iterations = num_iterations
+        self.start_iter = start_iter
+
+    def __iter__(self):
+        iteration = self.start_iter
+        while iteration <= self.num_iterations:
+            # if the underlying sampler has a set_epoch method, like
+            # DistributedSampler, used for making each process see
+            # a different split of the dataset, then set it
+            if hasattr(self.batch_sampler.sampler, "set_epoch"):
+                self.batch_sampler.sampler.set_epoch(iteration)
+            for batch in self.batch_sampler:
+                iteration += 1
+                if iteration > self.num_iterations:
+                    break
+                yield batch
+
+    def __len__(self):
+        return self.num_iterations
 def run_test():
 
     class TestModel(BoringModel):
@@ -119,21 +140,20 @@ def run_test():
             print('override any method to prove your bug')
 
     # fake data
-    train_data = torch.utils.data.DataLoader(RandomDataset(32, 64))
-    val_data = torch.utils.data.DataLoader(RandomDataset(32, 64))
-    test_data = torch.utils.data.DataLoader(RandomDataset(32, 64))
+    batch_sampler = BatchSampler(SequentialSampler(range(10)), batch_size=4, drop_last=True)
+    batch_sampler2 = IterationBasedBatchSampler(batch_sampler, num_iterations=2)
+    train_data = torch.utils.data.DataLoader(RandomDataset(32, 64), batch_sampler=batch_sampler2)
 
     # model
     model = TestModel()
     trainer = Trainer(
         default_root_dir=os.getcwd(),
-        limit_train_batches=1,
-        limit_val_batches=1,
         max_epochs=1,
         weights_summary=None,
+        gpus=2,
+        accelerator="ddp"
     )
-    trainer.fit(model, train_data, val_data)
-    trainer.test(test_dataloaders=test_data)
+    trainer.fit(model, train_data)
 
 
 if __name__ == '__main__':
