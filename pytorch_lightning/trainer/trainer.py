@@ -323,7 +323,6 @@ class Trainer(
         self.config_validator = ConfigValidator(self)
         self.data_connector = DataConnector(self)
         self.optimizer_connector = OptimizerConnector(self)
-        self.slurm_connector = SLURMConnector(self, num_nodes)
         self.accelerator_connector = BackendConnector(
             num_processes,
             tpu_cores,
@@ -338,7 +337,6 @@ class Trainer(
             precision,
             amp_backend,
             amp_level,
-            self.is_slurm_managing_tasks,  # set by slurm connector
         )
         self.logger_connector = LoggerConnector(self, log_gpu_memory)
         self.model_connector = ModelConnector(self)
@@ -348,6 +346,7 @@ class Trainer(
         self.training_tricks_connector = TrainingTricksConnector(self)
         self.profile_connector = ProfilerConnector(self)
         self.checkpoint_connector = CheckpointConnector(self)
+        self.slurm_connector = SLURMConnector(self)
         self.tuner = Tuner(self)
         self.evaluation_loop = EvaluationLoop(self)
         self.train_loop = TrainLoop(self, multiple_trainloader_mode)
