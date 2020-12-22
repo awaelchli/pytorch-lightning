@@ -10,10 +10,8 @@ import torch
 
 class SLURMConnector:
 
-    def __init__(self, trainer):
+    def __init__(self, trainer, num_gpu_nodes):
         self.trainer = trainer
-
-    def on_trainer_init(self, num_gpu_nodes):
         self.configure_slurm_ddp(num_gpu_nodes)
 
     def configure_slurm_ddp(self, num_gpu_nodes):
