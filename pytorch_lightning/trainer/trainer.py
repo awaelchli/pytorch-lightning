@@ -346,6 +346,7 @@ class Trainer(
 
         # training state
         self.weights_summary = weights_summary
+        self.model = None
         self.shown_warnings = set()
 
         # init callbacks
