@@ -65,6 +65,10 @@ class TrainingTypePlugin(Plugin, ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def reduce(self, output, *args, **kwargs):
+        raise NotImplementedError
+
+    @abstractmethod
     def barrier(self, name: Optional[str] = None):
         raise NotImplementedError
 
@@ -133,7 +137,7 @@ class SingleDevicePlugin(TrainingTypePlugin):
     def on_gpu(self):
         return self.device.type == "cuda" and torch.cuda.is_available()
 
-    def reduce(self, output):
+    def reduce(self, output, *args, **kwargs):
         return output
 
     @property
@@ -170,10 +174,6 @@ class ParallelPlugin(TrainingTypePlugin, ABC):
         self.world_size = 1
         self.cluster_environment = cluster_environment
 
-    @abstractmethod
-    def reduce(self, output):
-        raise NotImplementedError
-
     @property
     @abstractmethod
     def root_device(self):
@@ -187,7 +187,7 @@ class ParallelPlugin(TrainingTypePlugin, ABC):
     def setup(self, model):
         raise NotImplementedError
 
-    def connect(self, model):
+    def connect(self, model, *args, **kwargs):
         self.setup(model)
         return self.model
 
@@ -226,7 +226,7 @@ class DataParallelPlugin(ParallelPlugin):
     def setup(self, model):
         self._model = LightningDataParallel(model, self.parallel_devices)
 
-    def reduce(self, output):
+    def reduce(self, output, *args, **kwargs):
         if isinstance(output, Result):
             output.dp_reduce()
 
