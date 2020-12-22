@@ -466,7 +466,7 @@ class DDPPlugin(ParallelPlugin):
 
         self.barrier()
 
-    def post_training(self, best_model_path):
+    def post_training(self):
         if "WORLD_SIZE" in os.environ:
             del os.environ["WORLD_SIZE"]
 
@@ -594,7 +594,7 @@ class DDPSpawnPlugin(ParallelPlugin):
         # persist info in ddp_spawn
         self.transfer_distrib_spawn_state_on_fit_end(results)
 
-    def post_training(self, best_model_path):
+    def post_training(self):
         # restore main state with best weights
         best_path = self.mp_queue.get()
         results = self.mp_queue.get()

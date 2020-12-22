@@ -526,7 +526,7 @@ class Trainer(
         else:
             self.training_type_plugin.start_training(self)
 
-        results = self.training_type_plugin.post_training(self.checkpoint_callback.best_model_path)
+        results = self.training_type_plugin.post_training()
         self.accelerator_backend.teardown()
 
         # ----------------------------
