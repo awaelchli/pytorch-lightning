@@ -128,6 +128,10 @@ class TrainerProperties(ABC):
         return self.accelerator_connector.num_processes
 
     @property
+    def root_gpu(self):
+        return self.accelerator_connector.root_gpu
+
+    @property
     def log_dir(self):
         if self.checkpoint_callback is not None:
             dirpath = self.checkpoint_callback.dirpath
