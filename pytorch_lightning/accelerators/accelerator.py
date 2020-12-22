@@ -284,6 +284,10 @@ class NewGPUAccelerator(NewAccelerator):
         with torch.cuda.device(self.root_device):
             torch.cuda.empty_cache()
 
+    def on_train_end(self):
+        # clean up memory
+        with torch.cuda.device(self.root_device):
+            torch.cuda.empty_cache()
 
 # TODO: Complete the TPUAccelerator
 class NewTPUAccelerator(NewAccelerator):
@@ -291,4 +295,7 @@ class NewTPUAccelerator(NewAccelerator):
         raise NotImplementedError
 
     def on_train_start(self):
+        raise NotImplementedError
+
+    def on_train_end(self):
         raise NotImplementedError
