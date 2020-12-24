@@ -577,6 +577,13 @@ class DDPSpawnPlugin(ParallelPlugin):
         smp = mp.get_context('spawn')
         self.mp_queue = smp.SimpleQueue()
 
+    def __getstate__(self):
+        self.mp_queue = None
+        return self.__dict__
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+
     def set_world_ranks(self, process_idx):
         self.local_rank = process_idx
         # check from where we get node_rank, num_processes and num_nodes
@@ -584,17 +591,18 @@ class DDPSpawnPlugin(ParallelPlugin):
         self.world_size = self.num_nodes * self.num_processes
 
     def start_training(self, trainer):
-        mp.spawn(self.new_process, nprocs=self.num_processes, args=(trainer,))
+        mp.spawn(self.new_process, nprocs=self.num_processes, args=(trainer, self.mp_queue))
 
     def start_testing(self, trainer):
-        mp.spawn(self.new_process, nprocs=self.num_processes, args=(trainer, ))
+        mp.spawn(self.new_process, nprocs=self.num_processes, args=(trainer, self.mp_queue))
 
-    def new_process(self, process_idx, trainer):
+    def new_process(self, process_idx, trainer, mp_queue):
         # TODO: check if needed
         seed = os.environ.get("PL_GLOBAL_SEED")
         if seed is not None:
             seed_everything(int(seed))
 
+        self.mp_queue = mp_queue
         self.set_world_ranks(process_idx)
 
         # set warning rank
@@ -696,11 +704,10 @@ class DDPSpawnPlugin(ParallelPlugin):
         # transfer back the best path to the trainer
         if self.lightning_module.trainer.checkpoint_callback:
             self.lightning_module.trainer.checkpoint_callback.best_model_path = best_path
-        # todo, pass also best score
 
+        # todo, pass also best score
         # load last weights
-        # TODO: How to get self.trainer.testing?
-        if last_path is not None: # and not self.trainer.testing:
+        if last_path is not None and not self.lightning_module.trainer.testing:
             ckpt = pl_load(last_path, map_location=lambda storage, loc: storage)
             self.lightning_module.load_state_dict(ckpt)
 
