@@ -118,6 +118,9 @@ class BackendConnector(object):
         # NVIDIA setup
         # self.set_nvidia_flags(self.trainer.is_slurm_managing_tasks, self.trainer.data_parallel_device_ids)
 
+        # benchmarking
+        torch.backends.cudnn.benchmark = self.benchmark
+
         self.on_colab_kaggle = os.getenv("COLAB_GPU") or os.getenv("KAGGLE_URL_BASE")
 
         self.replace_sampler_ddp = replace_sampler_ddp
