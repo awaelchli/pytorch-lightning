@@ -3,6 +3,7 @@ from contextlib import contextmanager
 from typing import Any, Dict, List, Optional, Union
 
 import torch.distributed as torch_distrib
+from torch.nn.parallel import DistributedDataParallel
 from torch.optim import Optimizer
 
 from pytorch_lightning import _logger as log
@@ -65,7 +66,7 @@ class DDPPlugin(LightningPlugin):
         )
         import torch
         print("device_ids", device_ids, model.device, model.device.index, torch.cuda.current_device())
-        model = LightningDistributedDataParallel(
+        model = DistributedDataParallel(
             model,
             device_ids=device_ids,
             **self._ddp_kwargs,
