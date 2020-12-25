@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 import re
 from contextlib import contextmanager
 
-from pytorch_lightning.cluster_environments import TorchElasticEnvironment
+from pytorch_lightning.cluster_environments import TorchElasticEnvironment, ClusterEnvironment
 from pytorch_lightning.utilities.cloud_io import atomic_save, load as pl_load
 from pytorch_lightning.accelerators.base_plugin import Plugin
 
@@ -282,7 +282,7 @@ class DDPPlugin(ParallelPlugin):
             self,
             parallel_devices,
             num_nodes=1,
-            cluster_environment=None,
+            cluster_environment: ClusterEnvironment = None,
             sync_batchnorm=False,
             **kwargs: Dict[str, Any],
     ) -> None:
@@ -295,8 +295,8 @@ class DDPPlugin(ParallelPlugin):
         self._has_spawned_children = False
         self.task_idx = None
         self.num_processes = len(parallel_devices)
-        self.local_rank = self.cluster_environment.local_rank
-        self.node_rank = self.cluster_environment.node_rank
+        self.local_rank = self.cluster_environment.local_rank()
+        self.node_rank = self.cluster_environment.node_rank()
         self.global_rank = self.node_rank * self.num_processes + self.local_rank
         self.world_size = self.num_nodes * self.num_processes
 
@@ -422,7 +422,6 @@ class DDPPlugin(ParallelPlugin):
         return [self.root_device.index]
 
     def init_ddp_connection(self, global_rank: int, world_size: int) -> None:
-        # TODO: From where to get cluster environment?
         os.environ["MASTER_ADDR"] = str(self.cluster_environment.master_address())
         os.environ["MASTER_PORT"] = str(self.cluster_environment.master_port())
         os.environ["WORLD_SIZE"] = str(self.cluster_environment.world_size())
@@ -438,15 +437,9 @@ class DDPPlugin(ParallelPlugin):
         if seed is not None:
             seed_everything(int(seed))
 
-        # determine which process we are and world size
-        self.set_world_ranks()
-
         # set warning rank
         rank_zero_only.rank = self.global_rank
 
-        # set up server using proc 0's ip address
-        # try to init for 20 times at max in case ports are taken
-        # where to store ip_table
         self.init_ddp_connection(self.global_rank, self.world_size)
 
         # TODO: we moved it to the trainer.fit after calling pre_training
@@ -515,6 +508,11 @@ class DDPSpawnPlugin(ParallelPlugin):
         self.dist = LightningDistributed()
         self.num_processes = len(parallel_devices)
         self.mp_queue = None
+        # ranks remain undefined outside spawned worker processes
+        self.local_rank = None
+        self.node_rank = None
+        self.global_rank = None
+        self.world_size = self.num_nodes * self.num_processes
 
     @property
     def root_device(self):
@@ -544,8 +542,8 @@ class DDPSpawnPlugin(ParallelPlugin):
 
     def set_world_ranks(self, process_idx):
         self.local_rank = process_idx
+        self.node_rank = self.cluster_environment.node_rank()
         self.global_rank = self.node_rank * self.num_processes + process_idx
-        self.world_size = self.num_nodes * self.num_processes
 
     def start_training(self, trainer):
         mp.spawn(self.new_process, nprocs=self.num_processes, args=(trainer,))
@@ -564,9 +562,6 @@ class DDPSpawnPlugin(ParallelPlugin):
         # set warning rank
         rank_zero_only.rank = self.global_rank
 
-        # set up server using proc 0's ip address
-        # try to init for 20 times at max in case ports are taken
-        # where to store ip_table
         self.init_ddp_connection(self.global_rank, self.world_size)
 
         # TODO: we moved it to the trainer.fit after calling pre_training
@@ -664,7 +659,7 @@ class DDPSpawnPlugin(ParallelPlugin):
 
         # load last weights
         # TODO: How to get self.trainer.testing?
-        if last_path is not None: # and not self.trainer.testing:
+        if last_path is not None and not self.lightning_module.trainer.testing:
             ckpt = pl_load(last_path, map_location=lambda storage, loc: storage)
             self.lightning_module.load_state_dict(ckpt)
 
