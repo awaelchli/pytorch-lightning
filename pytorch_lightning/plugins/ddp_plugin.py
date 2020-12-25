@@ -83,6 +83,9 @@ class DDPPlugin(LightningPlugin):
         os.environ["WORLD_SIZE"] = str(cluster_environment.world_size())
         torch_backend = "nccl" if trainer.on_gpu else "gloo"
 
+        print(global_rank, "WORLD SIZE", world_size, cluster_environment.world_size)
+        assert world_size == cluster_environment.world_size
+        
         if not torch_distrib.is_initialized():
             log.info(
                 f"initializing ddp: GLOBAL_RANK: {global_rank}, MEMBER: {global_rank + 1}/{world_size}"
