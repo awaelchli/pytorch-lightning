@@ -63,6 +63,7 @@ class DDPPlugin(LightningPlugin):
         self._ddp_kwargs["find_unused_parameters"] = self._ddp_kwargs.get(
             "find_unused_parameters", True
         )
+        print("device_ids", device_ids)
         model = LightningDistributedDataParallel(
             model,
             device_ids=device_ids,
