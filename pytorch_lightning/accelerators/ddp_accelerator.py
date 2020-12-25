@@ -312,6 +312,9 @@ class DDPAccelerator(Accelerator):
         # device ids change depending on the DDP setup
         device_ids = self.get_device_ids()
 
+        torch_distrib.barrier()
+        print(self.trainer.global_rank, "barrier 5.5")
+
         # allow user to configure ddp
         model = self.configure_ddp(model, device_ids)
 
