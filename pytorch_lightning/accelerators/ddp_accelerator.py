@@ -256,6 +256,8 @@ class DDPAccelerator(Accelerator):
             self.trainer.is_slurm_managing_tasks
         )
 
+        torch_distrib.barrier()
+
         if isinstance(self.ddp_plugin, RPCPlugin):
             if not self.ddp_plugin.is_main_rpc_process:
                 self.ddp_plugin.on_accelerator_exit_rpc_process(self.trainer)
@@ -264,6 +266,8 @@ class DDPAccelerator(Accelerator):
                     return
             else:
                 self.ddp_plugin.on_main_rpc_connection(self.trainer)
+
+        torch_distrib.barrier()
 
         # call setup after the ddp process has connected
         self.trainer.call_setup_hook(model)
@@ -275,12 +279,18 @@ class DDPAccelerator(Accelerator):
             log.info(f'All DDP processes registered. Starting ddp with {self.trainer.world_size} processes')
             log.info('-' * 100)
 
+        torch_distrib.barrier()
+
         # call sync_bn before .cuda(), configure_apex and configure_ddp
         if self.trainer.sync_batchnorm:
             model = self.configure_sync_batchnorm(model)
 
+        torch_distrib.barrier()
+
         # move the model to the correct device
         self.model_to_device(model)
+
+        torch_distrib.barrier()
 
         # CHOOSE OPTIMIZER
         # allow for lr schedulers as well
