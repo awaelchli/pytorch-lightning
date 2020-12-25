@@ -256,6 +256,7 @@ class DDPAccelerator(Accelerator):
             self.trainer.is_slurm_managing_tasks
         )
 
+        print(self.trainer.global_rank, "barrier 1")
         torch_distrib.barrier()
 
         if isinstance(self.ddp_plugin, RPCPlugin):
@@ -267,6 +268,7 @@ class DDPAccelerator(Accelerator):
             else:
                 self.ddp_plugin.on_main_rpc_connection(self.trainer)
 
+        print(self.trainer.global_rank, "barrier 2")
         torch_distrib.barrier()
 
         # call setup after the ddp process has connected
@@ -279,17 +281,20 @@ class DDPAccelerator(Accelerator):
             log.info(f'All DDP processes registered. Starting ddp with {self.trainer.world_size} processes')
             log.info('-' * 100)
 
+        print(self.trainer.global_rank, "barrier 3")
         torch_distrib.barrier()
 
         # call sync_bn before .cuda(), configure_apex and configure_ddp
         if self.trainer.sync_batchnorm:
             model = self.configure_sync_batchnorm(model)
 
+        print(self.trainer.global_rank, "barrier 4")
         torch_distrib.barrier()
 
         # move the model to the correct device
         self.model_to_device(model)
 
+        print(self.trainer.global_rank, "barrier 5")
         torch_distrib.barrier()
 
         # CHOOSE OPTIMIZER
@@ -312,6 +317,7 @@ class DDPAccelerator(Accelerator):
 
         # set up training routine
         print(self.trainer.global_rank, "world size", torch.distributed.get_world_size(), os.environ["WORLD_SIZE"], os.environ["LOCAL_RANK"])
+        print(self.trainer.global_rank, "barrier 6")
         torch_distrib.barrier()
         # self.barrier('ddp_setup')
         self.trainer.train_loop.setup_training(model)
