@@ -94,6 +94,9 @@ class DDPPlugin(LightningPlugin):
                 torch_backend, rank=global_rank, world_size=world_size
             )
 
+        print(global_rank, "testing barrier")
+        torch_distrib.barrier(group=None)
+
     def on_before_forward(self, model: LightningModule, *args):
         """
         Override to handle custom input to device logic. For DDP, no logic is required as this is handled internally
