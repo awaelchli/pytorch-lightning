@@ -13,7 +13,8 @@
 # limitations under the License.
 import pickle
 from argparse import ArgumentParser
-from unittest.mock import MagicMock
+from unittest import mock
+from unittest.mock import MagicMock, PropertyMock
 from typing import Optional
 
 import pytest
@@ -29,8 +30,11 @@ from pytorch_lightning.utilities.model_utils import is_overridden
 from pytorch_lightning.callbacks import ModelCheckpoint
 
 
-def test_can_prepare_data(tmpdir):
+@mock.patch("pytorch_lightning.trainer.trainer.Trainer.local_rank", new_callable=PropertyMock)
+@mock.patch("pytorch_lightning.trainer.trainer.Trainer.node_rank", new_callable=PropertyMock)
+def test_can_prepare_data(local_rank, node_rank):
 
+    # with mock.patch("Trainer.local_rank", new_callable=PropertyMock) as local_rank:
     dm = TrialMNISTDataModule()
     trainer = Trainer()
     trainer.datamodule = dm
@@ -39,33 +43,34 @@ def test_can_prepare_data(tmpdir):
     # prepare_data_per_node = True
     # local rank = 0   (True)
     trainer.prepare_data_per_node = True
-    trainer.local_rank = 0
+
+    local_rank.return_value = 0
     assert trainer.data_connector.can_prepare_data()
 
     # local rank = 1   (False)
-    trainer.local_rank = 1
+    local_rank.return_value = 1
     assert not trainer.data_connector.can_prepare_data()
 
     # prepare_data_per_node = False (prepare across all nodes)
     # global rank = 0   (True)
     trainer.prepare_data_per_node = False
     trainer.node_rank = 0
-    trainer.local_rank = 0
+    local_rank.return_value = 0
     assert trainer.data_connector.can_prepare_data()
 
     # global rank = 1   (False)
     trainer.node_rank = 1
-    trainer.local_rank = 0
+    local_rank.return_value = 0
     assert not trainer.data_connector.can_prepare_data()
     trainer.node_rank = 0
-    trainer.local_rank = 1
+    local_rank.return_value = 1
     assert not trainer.data_connector.can_prepare_data()
 
     # 2 dm
     # prepar per node = True
     # local rank = 0 (True)
     trainer.prepare_data_per_node = True
-    trainer.local_rank = 0
+    local_rank.return_value = 0
 
     # is_overridden prepare data = True
     # has been called

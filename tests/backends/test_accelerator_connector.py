@@ -54,6 +54,7 @@ def test_accelerator_choice_ddp(tmpdir):
         accelerator='ddp',
         gpus=1,
     )
+
     assert isinstance(trainer.accelerator_backend, NewGPUAccelerator)
     assert isinstance(trainer.training_type_plugin, DDPPlugin)
     assert isinstance(trainer.training_type_plugin.cluster_environment, TorchElasticEnvironment)

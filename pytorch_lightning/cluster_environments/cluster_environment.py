@@ -20,14 +20,17 @@ class ClusterEnvironment(LightningPlugin):
     def __init__(self):
         self._world_size = None
 
-    def master_address(self):
+    def master_address(self) -> str:
         pass
 
-    def master_port(self):
+    def master_port(self) -> str:
         pass
 
-    def world_size(self):
+    def world_size(self) -> int:
         return self._world_size
 
-    def local_rank(self):
+    def local_rank(self) -> int:
+        pass
+
+    def node_rank(self) -> int:
         pass

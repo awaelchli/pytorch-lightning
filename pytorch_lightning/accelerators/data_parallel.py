@@ -90,23 +90,6 @@ class TrainingTypePlugin(Plugin, ABC):
         devices = os.environ.get("CUDA_VISIBLE_DEVICES", all_gpu_ids)
         log.info(f'LOCAL_RANK: {self.trainer.local_rank} - CUDA_VISIBLE_DEVICES: [{devices}]')
 
-    def determine_local_rank(self):
-        return int(os.environ.get('LOCAL_RANK', 0))
-
-    def determine_node_rank(self):
-        # torchelastic uses the envvar GROUP_RANK, whereas other systems(?) use NODE_RANK.
-        # otherwise use given node rank or default to node rank 0
-        env_vars = ['NODE_RANK', 'GROUP_RANK']
-        node_ids = [(k, os.environ.get(k, None)) for k in env_vars]
-        node_ids = [(k, v) for k, v in node_ids if v is not None]
-        if len(node_ids) == 0:
-            return 0
-        if len(node_ids) > 1:
-            log.warning(f"Multiple environment variables ({node_ids}) defined for node rank. Using the first one.")
-        k, rank = node_ids.pop()
-        rank_zero_info(f"Using environment variable {k} for node rank ({rank}).")
-        return int(rank)
-
     def reduce_early_stopping_decision(self, should_stop: bool) -> bool:
         return should_stop
 
@@ -300,20 +283,22 @@ class DDPPlugin(ParallelPlugin):
             parallel_devices,
             num_nodes=1,
             cluster_environment=None,
-            is_slurm_managing_tasks=False,
             sync_batchnorm=False,
             **kwargs: Dict[str, Any],
     ) -> None:
         super().__init__(parallel_devices=parallel_devices, cluster_environment=cluster_environment)
         self.interactive_ddp_procs = []
         self.num_nodes = num_nodes
-        self.is_slurm_managing_tasks = is_slurm_managing_tasks
         self.sync_batchnorm = sync_batchnorm
         self.dist = LightningDistributed()
         self._ddp_kwargs = kwargs
         self._has_spawned_children = False
         self.task_idx = None
         self.num_processes = len(parallel_devices)
+        self.local_rank = self.cluster_environment.local_rank
+        self.node_rank = self.cluster_environment.node_rank
+        self.global_rank = self.node_rank * self.num_processes + self.local_rank
+        self.world_size = self.num_nodes * self.num_processes
 
     @property
     def root_device(self):
@@ -331,18 +316,6 @@ class DDPPlugin(ParallelPlugin):
             rank=self.global_rank
         )
         return distributed_sampler_kwargs
-
-    def determine_local_rank(self):
-        if self.is_slurm_managing_tasks:
-            return int(os.environ['SLURM_LOCALID'])
-        else:
-            return super().determine_node_rank()
-
-    def determine_node_rank(self):
-        if self.is_slurm_managing_tasks:
-            return int(os.environ['SLURM_NODEID'])
-        else:
-            return super().determine_node_rank()
 
     def setup(self, model):
         self._model = model
@@ -433,12 +406,6 @@ class DDPPlugin(ParallelPlugin):
                 "You tried to run `.fit` or `.test` multiple times in the same script."
                 " This is not supported in DDP mode, switch to `distributed_backend='ddp_spawn'` instead."
             )
-
-    def set_world_ranks(self):
-        self.local_rank = self.task_idx
-        # TODO: check from where we get node_rank and num_processes
-        self.global_rank = self.determine_node_rank() * self.num_processes + self.task_idx
-        self.world_size = self.num_nodes * self.num_processes
 
     def configure_ddp(self):
         # if unset, default `find_unused_parameters` `True`
@@ -538,13 +505,11 @@ class DDPSpawnPlugin(ParallelPlugin):
         parallel_devices,
         num_nodes=1,
         cluster_environment=None,
-        is_slurm_managing_tasks=False,
         sync_batchnorm=False,
         **kwargs: Dict[str, Any]
     ):
         super().__init__(parallel_devices=parallel_devices, cluster_environment=cluster_environment)
         self.num_nodes = num_nodes
-        self.is_slurm_managing_tasks = is_slurm_managing_tasks
         self.sync_batchnorm = sync_batchnorm
         self._ddp_kwargs = kwargs
         self.dist = LightningDistributed()
@@ -579,8 +544,7 @@ class DDPSpawnPlugin(ParallelPlugin):
 
     def set_world_ranks(self, process_idx):
         self.local_rank = process_idx
-        # check from where we get node_rank, num_processes and num_nodes
-        self.global_rank = self.determine_node_rank() * self.num_processes + process_idx
+        self.global_rank = self.node_rank * self.num_processes + process_idx
         self.world_size = self.num_nodes * self.num_processes
 
     def start_training(self, trainer):
@@ -703,18 +667,6 @@ class DDPSpawnPlugin(ParallelPlugin):
         if last_path is not None: # and not self.trainer.testing:
             ckpt = pl_load(last_path, map_location=lambda storage, loc: storage)
             self.lightning_module.load_state_dict(ckpt)
-
-    def determine_local_rank(self):
-        if self.is_slurm_managing_tasks:
-            return int(os.environ['SLURM_LOCALID'])
-        else:
-            return super().determine_node_rank()
-
-    def determine_node_rank(self):
-        if self.is_slurm_managing_tasks:
-            return int(os.environ['SLURM_NODEID'])
-        else:
-            return super().determine_node_rank()
 
     def barrier(self, *args, **kwargs):
         if torch_distrib.is_initialized():
