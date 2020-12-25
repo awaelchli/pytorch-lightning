@@ -63,7 +63,8 @@ class DDPPlugin(LightningPlugin):
         self._ddp_kwargs["find_unused_parameters"] = self._ddp_kwargs.get(
             "find_unused_parameters", True
         )
-        print("device_ids", device_ids)
+        import torch
+        print("device_ids", device_ids, model.device, model.device.index, torch.cuda.current_device())
         model = LightningDistributedDataParallel(
             model,
             device_ids=device_ids,
