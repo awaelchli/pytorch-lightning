@@ -54,15 +54,15 @@ def test_can_prepare_data(local_rank, node_rank):
     # prepare_data_per_node = False (prepare across all nodes)
     # global rank = 0   (True)
     trainer.prepare_data_per_node = False
-    trainer.node_rank = 0
+    node_rank.return_value = 0
     local_rank.return_value = 0
     assert trainer.data_connector.can_prepare_data()
 
     # global rank = 1   (False)
-    trainer.node_rank = 1
+    node_rank.return_value = 1
     local_rank.return_value = 0
     assert not trainer.data_connector.can_prepare_data()
-    trainer.node_rank = 0
+    node_rank.return_value = 0
     local_rank.return_value = 1
     assert not trainer.data_connector.can_prepare_data()
 

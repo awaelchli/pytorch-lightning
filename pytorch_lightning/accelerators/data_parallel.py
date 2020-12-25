@@ -295,9 +295,7 @@ class DDPPlugin(ParallelPlugin):
         self._has_spawned_children = False
         self.task_idx = None
         self.num_processes = len(parallel_devices)
-        self.local_rank = self.cluster_environment.local_rank()
-        self.node_rank = self.cluster_environment.node_rank()
-        self.global_rank = self.node_rank * self.num_processes + self.local_rank
+        self.node_rank = None
         self.world_size = self.num_nodes * self.num_processes
 
     @property
@@ -407,6 +405,11 @@ class DDPPlugin(ParallelPlugin):
                 " This is not supported in DDP mode, switch to `distributed_backend='ddp_spawn'` instead."
             )
 
+    def set_world_ranks(self):
+        self.local_rank = self.task_idx
+        self.node_rank = self.cluster_environment.node_rank()
+        self.global_rank = self.node_rank * self.num_processes + self.local_rank
+
     def configure_ddp(self):
         # if unset, default `find_unused_parameters` `True`
         self._ddp_kwargs["find_unused_parameters"] = self._ddp_kwargs.get("find_unused_parameters", True)
@@ -436,6 +439,8 @@ class DDPPlugin(ParallelPlugin):
         seed = os.environ.get("PL_GLOBAL_SEED")
         if seed is not None:
             seed_everything(int(seed))
+
+        self.set_world_ranks()
 
         # set warning rank
         rank_zero_only.rank = self.global_rank
