@@ -94,8 +94,8 @@ class DDPPlugin(LightningPlugin):
                 torch_backend, rank=global_rank, world_size=world_size
             )
 
-            print(global_rank, "testing barrier")
-            torch_distrib.barrier(group=None)
+        print(global_rank, "testing barrier")
+        torch_distrib.barrier()
 
     def on_before_forward(self, model: LightningModule, *args):
         """
