@@ -300,7 +300,8 @@ class DDPAccelerator(Accelerator):
         model = self.configure_ddp(model, device_ids)
 
         # set up training routine
-        self.barrier('ddp_setup')
+        torch_distrib.barrier()
+        # self.barrier('ddp_setup')
         self.trainer.train_loop.setup_training(model)
 
         # train or test
