@@ -141,7 +141,7 @@ def test_run():
         limit_val_batches=1,
         max_epochs=1,
         weights_summary=None,
-        gpus=[1, 2],
+        gpus="1,2",
         distributed_backend='ddp',
     )
     trainer.fit(model, train_data, val_data)
