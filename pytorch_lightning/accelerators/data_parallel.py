@@ -508,9 +508,9 @@ class DDPSpawnPlugin(ParallelPlugin):
         self.dist = LightningDistributed()
         self.num_processes = len(parallel_devices)
         self.mp_queue = None
-        # ranks remain undefined outside spawned worker processes
-        self.local_rank = None
-        self.node_rank = None
+        self.local_rank = 0
+        self.node_rank = 0
+        # global rank remains undefined outside spawned worker processes
         self.global_rank = None
         self.world_size = self.num_nodes * self.num_processes
 
