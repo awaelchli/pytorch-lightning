@@ -300,6 +300,7 @@ class DDPAccelerator(Accelerator):
         model = self.configure_ddp(model, device_ids)
 
         # set up training routine
+        print(self.trainer.global_rank, "world size", torch.distributed.get_world_size())
         torch_distrib.barrier()
         # self.barrier('ddp_setup')
         self.trainer.train_loop.setup_training(model)
