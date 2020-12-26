@@ -266,7 +266,7 @@ class DDPAccelerator(Accelerator):
                 "nccl", rank=self.trainer.global_rank, world_size=self.trainer.world_size
             )
 
-        # torch_distrib.barrier()
+        torch_distrib.barrier()
 
         # torch.cuda.set_device(torch.device("cuda", self.trainer.data_parallel_device_ids[process_idx]))
 
