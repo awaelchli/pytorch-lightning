@@ -282,10 +282,13 @@ class DDPAccelerator(Accelerator):
 
         self.trainer.root_gpu = self.trainer.data_parallel_device_ids[self.trainer.local_rank]
 
+        if self.trainer.sync_batchnorm:
+            model = self.configure_sync_batchnorm(model)
+
         model = model.cuda(self.trainer.root_gpu)
 
         device_ids = self.get_device_ids()
-        
+
         model = self.configure_ddp(model, device_ids=device_ids)
         torch_distrib.barrier()
         # print(self.trainer.global_rank, "barrier 6")
