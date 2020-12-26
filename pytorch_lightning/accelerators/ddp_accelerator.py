@@ -246,7 +246,7 @@ class DDPAccelerator(Accelerator):
         # try to init for 20 times at max in case ports are taken
         # where to store ip_table
         model.trainer = self.trainer
-        # self.init_ddp_connection(global_rank=self.trainer.global_rank, world_size=2, is_slurm_managing_tasks=False)
+        self.init_ddp_connection(global_rank=self.trainer.global_rank, world_size=2, is_slurm_managing_tasks=False)
         # os.environ["MASTER_ADDR"] = "localhost"
         # os.environ["MASTER_PORT"] = "123445"
         # os.environ["WORLD_SIZE"] = "2"
@@ -254,22 +254,22 @@ class DDPAccelerator(Accelerator):
         # torch.distributed.init_process_group(backend="nccl", world_size=2, rank=self.trainer.global_rank)
 
 
-        os.environ["MASTER_ADDR"] = str(self.cluster_environment.master_address())
-        os.environ["MASTER_PORT"] = str(self.cluster_environment.master_port())
-        os.environ["WORLD_SIZE"] = "2"  # str(cluster_environment.world_size())
-
-        # print(self.trainer.global_rank, "WORLD SIZE", self.trainer.world_size, self.cluster_environment.world_size())
-        # assert world_size == int(cluster_environment.world_size())
-
-        if not torch_distrib.is_initialized():
-            print(self.trainer.global_rank, "not init")
-            torch_distrib.init_process_group(
-                "nccl", rank=self.trainer.global_rank, world_size=self.trainer.world_size
-            )
-        else:
-            print(self.trainer.global_rank, "already init")
-
-        torch_distrib.barrier()
+        # os.environ["MASTER_ADDR"] = str(self.cluster_environment.master_address())
+        # os.environ["MASTER_PORT"] = str(self.cluster_environment.master_port())
+        # os.environ["WORLD_SIZE"] = "2"  # str(cluster_environment.world_size())
+        #
+        # # print(self.trainer.global_rank, "WORLD SIZE", self.trainer.world_size, self.cluster_environment.world_size())
+        # # assert world_size == int(cluster_environment.world_size())
+        #
+        # if not torch_distrib.is_initialized():
+        #     print(self.trainer.global_rank, "not init")
+        #     torch_distrib.init_process_group(
+        #         "nccl", rank=self.trainer.global_rank, world_size=self.trainer.world_size
+        #     )
+        # else:
+        #     print(self.trainer.global_rank, "already init")
+        #
+        # torch_distrib.barrier()
 
         # torch.cuda.set_device(torch.device("cuda", self.trainer.data_parallel_device_ids[process_idx]))
 
