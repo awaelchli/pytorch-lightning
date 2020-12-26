@@ -320,6 +320,7 @@ class DDPAccelerator(Accelerator):
 
         # set up training routine
         print(self.trainer.global_rank, "device", model.module.device)
+        print(model.process_group, torch_distrib.group.WORLD, "pg")
         print(self.trainer.global_rank, "world size", torch.distributed.get_world_size(), os.environ["WORLD_SIZE"], os.environ["LOCAL_RANK"])
         torch_distrib.barrier()
         print(self.trainer.global_rank, "barrier 6")
