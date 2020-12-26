@@ -287,12 +287,7 @@ class DDPAccelerator(Accelerator):
         print(self.trainer.global_rank, "barrier 4")
         torch_distrib.barrier()
 
-        # Initialize cuda device
-        print("process idx", process_idx)
-        self.init_device(process_idx)
 
-        # move the model to the correct device
-        self.model_to_device(model)
 
         print(self.trainer.global_rank, "barrier 5")
         torch_distrib.barrier()
@@ -312,13 +307,25 @@ class DDPAccelerator(Accelerator):
         # device ids change depending on the DDP setup
         device_ids = self.get_device_ids()
 
+        print(self.trainer.global_rank, "device_ids", device_ids)
+
         torch_distrib.barrier()
         print(self.trainer.global_rank, "barrier 5.5")
 
         # allow user to configure ddp
-        model = self.configure_ddp(model, device_ids)
+        # model = self.configure_ddp(model, device_ids)
 
-        # set up training routine
+        # Initialize cuda device
+        print("process idx", process_idx)
+        self.init_device(process_idx)
+
+        # move the model to the correct device
+        self.model_to_device(model)
+
+        model = DistributedDataParallel(model, device_ids=device_ids)
+
+
+    # set up training routine
         print(self.trainer.global_rank, "device", model.module.device)
         print(model.process_group == torch_distrib.group.WORLD, "pg")
         print(self.trainer.global_rank, "world size", torch.distributed.get_world_size(), os.environ["WORLD_SIZE"], os.environ["LOCAL_RANK"])
