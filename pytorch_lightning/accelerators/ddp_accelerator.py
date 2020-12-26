@@ -246,7 +246,7 @@ class DDPAccelerator(Accelerator):
         # try to init for 20 times at max in case ports are taken
         # where to store ip_table
 
-        self.trainer.root_gpu = self.trainer.data_parallel_device_ids[self.trainer.local_rank]
+        self.trainer.root_gpu = self.trainer.data_parallel_device_ids[process_idx]
         torch.cuda.set_device(torch.device(self.trainer.root_gpu))
 
         model.trainer = self.trainer
