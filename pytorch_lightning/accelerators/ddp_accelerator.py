@@ -251,8 +251,8 @@ class DDPAccelerator(Accelerator):
         # os.environ["MASTER_PORT"] = "123445"
         # os.environ["WORLD_SIZE"] = "2"
         # torch_backend = "nccl"
-
-        # torch.cuda.set_device(torch.device("cuda", self.trainer.data_parallel_device_ids[process_idx]))
+        print("ddp id", self.trainer.data_parallel_device_ids[process_idx])
+        torch.cuda.set_device(torch.device("cuda", self.trainer.data_parallel_device_ids[process_idx]))
 
         # if not torch_distrib.is_initialized():
         #     torch_distrib.init_process_group(
