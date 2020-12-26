@@ -246,20 +246,18 @@ class DDPAccelerator(Accelerator):
         # try to init for 20 times at max in case ports are taken
         # where to store ip_table
         model.trainer = self.trainer
-        self.init_ddp_connection(
-            self.trainer.global_rank,
-            self.trainer.world_size,
-            self.trainer.is_slurm_managing_tasks
-        )
 
-        # call setup after the ddp process has connected
-        # self.trainer.call_setup_hook(model)
+        os.environ["MASTER_ADDR"] = "localhost"
+        os.environ["MASTER_PORT"] = "123445"
+        os.environ["WORLD_SIZE"] = "2"
+        torch_backend = "nccl"
 
-        # call sync_bn before .cuda(), configure_apex and configure_ddp
-        # if self.trainer.sync_batchnorm:
-        #     model = self.configure_sync_batchnorm(model)
+        if not torch_distrib.is_initialized():
+            torch_distrib.init_process_group(
+                torch_backend, rank=self.trainer.global_rank, world_size=self.trainer.world_size
+            )
 
-        self.init_device(process_idx)
+        torch.cuda.set_device(torch.device("cuda", process_idx))
         device_ids = self.get_device_ids()
         self.model_to_device(model)
         model = DistributedDataParallel(model, device_ids=device_ids)
