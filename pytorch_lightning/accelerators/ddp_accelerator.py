@@ -271,7 +271,7 @@ class DDPAccelerator(Accelerator):
         if self.trainer.sync_batchnorm:
             model = self.configure_sync_batchnorm(model)
 
-        model = model.cuda(self.trainer.root_gpu)
+        self.model_to_device(model)
 
         self.setup_optimizers(model)
 
