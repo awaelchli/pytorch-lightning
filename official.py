@@ -42,6 +42,8 @@ def demo_basic(rank, world_size):
     model = ToyModel().to(root_gpu)
     ddp_model = DDP(model, device_ids=[gpus[rank]])
 
+    torch.distributed.barrier()
+
     loss_fn = nn.MSELoss()
     optimizer = optim.SGD(ddp_model.parameters(), lr=0.001)
 
