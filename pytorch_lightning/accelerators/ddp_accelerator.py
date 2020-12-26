@@ -266,13 +266,13 @@ class DDPAccelerator(Accelerator):
         torch_distrib.barrier()
         # print(self.trainer.global_rank, "barrier 6")
         # # self.barrier('ddp_setup')
-        # self.trainer.train_loop.setup_training(model)
+        self.trainer.train_loop.setup_training(model)
         #
         # # train or test
-        # results = self.train_or_test()
+        results = self.train_or_test()
         #
         # # clean up memory
-        # torch.cuda.empty_cache()
+        torch.cuda.empty_cache()
         raise SystemExit()
         # return results
 
