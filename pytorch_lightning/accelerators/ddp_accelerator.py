@@ -262,7 +262,7 @@ class DDPAccelerator(Accelerator):
         # torch.distributed.barrier()
 
 
-        self.model_to_device(model)
+        model = model.cuda(self.trainer.data_parallel_device_ids[process_idx])
         model = DistributedDataParallel(model, device_ids=[self.trainer.data_parallel_device_ids[process_idx]])
         torch_distrib.barrier()
         # print(self.trainer.global_rank, "barrier 6")
