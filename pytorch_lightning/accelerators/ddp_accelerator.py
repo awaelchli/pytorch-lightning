@@ -284,7 +284,7 @@ class DDPAccelerator(Accelerator):
         device_ids = self.get_device_ids()
 
         model = self.configure_ddp(model, device_ids=device_ids)
-        torch_distrib.barrier()
+        self.barrier("ddp_setup")
         # print(self.trainer.global_rank, "barrier 6")
         # # self.barrier('ddp_setup')
         self.trainer.train_loop.setup_training(model)
