@@ -304,10 +304,9 @@ class DDPAccelerator(Accelerator):
 
         self.trainer.convert_to_lightning_optimizers()
 
-        # device ids change depending on the DDP setup
-        device_ids = self.get_device_ids()
 
-        print(self.trainer.global_rank, "device_ids", device_ids)
+
+
 
         torch_distrib.barrier()
         print(self.trainer.global_rank, "barrier 5.5")
@@ -316,8 +315,15 @@ class DDPAccelerator(Accelerator):
         # model = self.configure_ddp(model, device_ids)
 
         # Initialize cuda device
+
+
         print("process idx", process_idx)
         self.init_device(process_idx)
+
+        # device ids change depending on the DDP setup
+        device_ids = self.get_device_ids()
+
+        print(self.trainer.global_rank, "device_ids", device_ids, self.trainer.root_gpu)
 
         # move the model to the correct device
         self.model_to_device(model)
