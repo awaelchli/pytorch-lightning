@@ -242,10 +242,6 @@ class DDPAccelerator(Accelerator):
         # set warning rank
         rank_zero_only.rank = self.trainer.global_rank
 
-        # Initialize cuda device
-        print("process idx", process_idx)
-        self.init_device(process_idx)
-
         # set up server using proc 0's ip address
         # try to init for 20 times at max in case ports are taken
         # where to store ip_table
@@ -291,6 +287,10 @@ class DDPAccelerator(Accelerator):
         print(self.trainer.global_rank, "barrier 4")
         torch_distrib.barrier()
 
+        # Initialize cuda device
+        print("process idx", process_idx)
+        self.init_device(process_idx)
+
         # move the model to the correct device
         self.model_to_device(model)
 
@@ -319,6 +319,7 @@ class DDPAccelerator(Accelerator):
         model = self.configure_ddp(model, device_ids)
 
         # set up training routine
+        print(self.trainer.global_rank, "device", model.module.device)
         print(self.trainer.global_rank, "world size", torch.distributed.get_world_size(), os.environ["WORLD_SIZE"], os.environ["LOCAL_RANK"])
         torch_distrib.barrier()
         print(self.trainer.global_rank, "barrier 6")
