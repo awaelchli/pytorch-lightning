@@ -245,11 +245,11 @@ class DDPAccelerator(Accelerator):
         # set up server using proc 0's ip address
         # try to init for 20 times at max in case ports are taken
         # where to store ip_table
-        model.trainer = self.trainer
 
         self.trainer.root_gpu = self.trainer.data_parallel_device_ids[self.trainer.local_rank]
         torch.cuda.set_device(torch.device(self.trainer.root_gpu))
 
+        model.trainer = self.trainer
         self.init_ddp_connection(global_rank=self.trainer.global_rank, world_size=2, is_slurm_managing_tasks=False)
 
         if isinstance(self.ddp_plugin, RPCPlugin):
