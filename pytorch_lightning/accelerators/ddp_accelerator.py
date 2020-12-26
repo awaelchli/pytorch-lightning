@@ -282,6 +282,8 @@ class DDPAccelerator(Accelerator):
 
         self.trainer.root_gpu = self.trainer.data_parallel_device_ids[self.trainer.local_rank]
 
+        self.trainer.call_setup_hook(model)
+
         if self.trainer.sync_batchnorm:
             model = self.configure_sync_batchnorm(model)
 
