@@ -258,8 +258,8 @@ class DDPAccelerator(Accelerator):
         #     torch_distrib.init_process_group(
         #         torch_backend, rank=self.trainer.global_rank, world_size=self.trainer.world_size
         #     )
-
-        torch.distributed.barrier()
+        #
+        # torch.distributed.barrier()
 
 
         device_ids = self.get_device_ids()
