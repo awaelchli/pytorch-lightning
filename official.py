@@ -38,6 +38,8 @@ def demo_basic(rank, world_size):
     root_gpu = torch.device("cuda", gpus[rank])
     setup(rank, world_size)
 
+    torch.cuda.set_device(root_gpu)
+
     # create model and move it to GPU with id rank
     model = ToyModel().to(root_gpu)
     ddp_model = DDP(model, device_ids=[gpus[rank]])
