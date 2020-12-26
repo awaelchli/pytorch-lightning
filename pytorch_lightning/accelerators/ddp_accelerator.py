@@ -273,6 +273,8 @@ class DDPAccelerator(Accelerator):
 
         model = model.cuda(self.trainer.root_gpu)
 
+        self.setup_optimizers(model)
+
         device_ids = self.get_device_ids()
 
         model = self.configure_ddp(model, device_ids=device_ids)
