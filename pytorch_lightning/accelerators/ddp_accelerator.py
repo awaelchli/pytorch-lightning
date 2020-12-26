@@ -281,7 +281,7 @@ class DDPAccelerator(Accelerator):
         # torch.distributed.barrier()
 
         model = model.to(torch.device(self.trainer.data_parallel_device_ids[process_idx]))
-        model = DistributedDataParallel(model, device_ids=[self.trainer.data_parallel_device_ids[process_idx]])
+        model = self.configure_ddp(model, device_ids=[self.trainer.data_parallel_device_ids[process_idx]])
         torch_distrib.barrier()
         # print(self.trainer.global_rank, "barrier 6")
         # # self.barrier('ddp_setup')
