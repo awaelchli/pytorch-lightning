@@ -252,7 +252,7 @@ class DDPAccelerator(Accelerator):
         # os.environ["WORLD_SIZE"] = "2"
         # torch_backend = "nccl"
 
-        torch.cuda.set_device(torch.device("cuda", self.trainer.data_parallel_device_ids[process_idx]))
+        # torch.cuda.set_device(torch.device("cuda", self.trainer.data_parallel_device_ids[process_idx]))
 
         # if not torch_distrib.is_initialized():
         #     torch_distrib.init_process_group(
@@ -261,8 +261,7 @@ class DDPAccelerator(Accelerator):
         #
         # torch.distributed.barrier()
 
-
-        # model = model.to(torch.device(self.trainer.data_parallel_device_ids[process_idx]))
+        model = model.to(torch.device(self.trainer.data_parallel_device_ids[process_idx]))
         model = DistributedDataParallel(model, device_ids=[self.trainer.data_parallel_device_ids[process_idx]])
         torch_distrib.barrier()
         # print(self.trainer.global_rank, "barrier 6")
