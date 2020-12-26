@@ -274,8 +274,10 @@ class DDPAccelerator(Accelerator):
         model = model.cuda(self.trainer.root_gpu)
 
         self.setup_optimizers(model)
-        
+
         self.trainer.model_connector.copy_trainer_model_properties(model)
+
+        model = self.trainer.precision_connector.connect(model)
 
         device_ids = self.get_device_ids()
 
