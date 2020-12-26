@@ -249,7 +249,11 @@ class DDPAccelerator(Accelerator):
         self.init_device(process_idx)
 
         model.trainer = self.trainer
-        self.init_ddp_connection(global_rank=self.trainer.global_rank, world_size=self.trainer.world_size, is_slurm_managing_tasks=self.trainer.is_slurm_managing_tasks)
+        self.init_ddp_connection(
+            self.trainer.global_rank,
+            self.trainer.world_size,
+            self.trainer.is_slurm_managing_tasks
+        )
 
         if isinstance(self.ddp_plugin, RPCPlugin):
             if not self.ddp_plugin.is_main_rpc_process:
