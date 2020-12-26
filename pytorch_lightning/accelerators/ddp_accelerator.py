@@ -258,7 +258,7 @@ class DDPAccelerator(Accelerator):
         os.environ["MASTER_PORT"] = str(self.cluster_environment.master_port())
         os.environ["WORLD_SIZE"] = "2"  # str(cluster_environment.world_size())
 
-        print(self.trainer.global_rank, "WORLD SIZE", self.trainer.world_size, self.cluster_environment.world_size())
+        # print(self.trainer.global_rank, "WORLD SIZE", self.trainer.world_size, self.cluster_environment.world_size())
         # assert world_size == int(cluster_environment.world_size())
 
         if not torch_distrib.is_initialized():
@@ -266,7 +266,7 @@ class DDPAccelerator(Accelerator):
                 "nccl", rank=self.trainer.global_rank, world_size=self.trainer.world_size
             )
 
-        torch_distrib.barrier()
+        # torch_distrib.barrier()
 
         # torch.cuda.set_device(torch.device("cuda", self.trainer.data_parallel_device_ids[process_idx]))
 
