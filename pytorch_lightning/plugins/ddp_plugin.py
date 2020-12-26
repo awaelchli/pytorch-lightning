@@ -66,7 +66,7 @@ class DDPPlugin(LightningPlugin):
         )
         import torch
         print("device_ids", device_ids, model.device, model.device.index, torch.cuda.current_device())
-        model = DistributedDataParallel(
+        model = LightningDistributedDataParallel(
             model,
             device_ids=device_ids,
             **self._ddp_kwargs,
