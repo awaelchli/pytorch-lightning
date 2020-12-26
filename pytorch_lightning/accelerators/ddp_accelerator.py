@@ -262,9 +262,12 @@ class DDPAccelerator(Accelerator):
         # assert world_size == int(cluster_environment.world_size())
 
         if not torch_distrib.is_initialized():
+            print(self.trainer.global_rank, "not init")
             torch_distrib.init_process_group(
                 "nccl", rank=self.trainer.global_rank, world_size=self.trainer.world_size
             )
+        else:
+            print(self.trainer.global_rank, "already init")
 
         torch_distrib.barrier()
 
