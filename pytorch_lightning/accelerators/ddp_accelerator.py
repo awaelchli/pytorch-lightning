@@ -252,101 +252,33 @@ class DDPAccelerator(Accelerator):
             self.trainer.is_slurm_managing_tasks
         )
 
-        print(self.trainer.global_rank, "barrier 1")
-        torch_distrib.barrier()
-
-        if isinstance(self.ddp_plugin, RPCPlugin):
-            if not self.ddp_plugin.is_main_rpc_process:
-                self.ddp_plugin.on_accelerator_exit_rpc_process(self.trainer)
-                self.ddp_plugin.exit_rpc_process()
-                if self.ddp_plugin.return_after_exit_rpc_process:
-                    return
-            else:
-                self.ddp_plugin.on_main_rpc_connection(self.trainer)
-
-        print(self.trainer.global_rank, "barrier 2")
-        torch_distrib.barrier()
-
         # call setup after the ddp process has connected
         self.trainer.call_setup_hook(model)
 
-        # on world_size=0 let everyone know training is starting
-        if self.trainer.is_global_zero and not torch.distributed.is_initialized():
-            log.info('-' * 100)
-            log.info(f'distributed_backend={self.trainer.distributed_backend}')
-            log.info(f'All DDP processes registered. Starting ddp with {self.trainer.world_size} processes')
-            log.info('-' * 100)
-
-        print(self.trainer.global_rank, "barrier 3")
-        torch_distrib.barrier()
-
         # call sync_bn before .cuda(), configure_apex and configure_ddp
-        if self.trainer.sync_batchnorm:
-            model = self.configure_sync_batchnorm(model)
+        # if self.trainer.sync_batchnorm:
+        #     model = self.configure_sync_batchnorm(model)
 
-        print(self.trainer.global_rank, "barrier 4")
-        torch_distrib.barrier()
-
-
-
-        print(self.trainer.global_rank, "barrier 5")
-        torch_distrib.barrier()
-
-        # CHOOSE OPTIMIZER
-        # allow for lr schedulers as well
         self.setup_optimizers(model)
-
-        # set model properties before going into wrapper
         self.trainer.model_connector.copy_trainer_model_properties(model)
-
-        # 16-bit
         model = self.trainer.precision_connector.connect(model)
-
         self.trainer.convert_to_lightning_optimizers()
-
-
-
-
-
-        torch_distrib.barrier()
-        print(self.trainer.global_rank, "barrier 5.5")
-
-        # allow user to configure ddp
-        # model = self.configure_ddp(model, device_ids)
-
-        # Initialize cuda device
-
-
-        print("process idx", process_idx)
         self.init_device(process_idx)
-
-        # device ids change depending on the DDP setup
         device_ids = self.get_device_ids()
-
-        print(self.trainer.global_rank, "device_ids", device_ids, self.trainer.root_gpu)
-
-        # move the model to the correct device
         self.model_to_device(model)
-
         model = DistributedDataParallel(model, device_ids=device_ids)
-
-
-    # set up training routine
-        print(self.trainer.global_rank, "device", model.module.device)
-        print(model.process_group == torch_distrib.group.WORLD, "pg")
-        print(self.trainer.global_rank, "world size", torch.distributed.get_world_size(), os.environ["WORLD_SIZE"], os.environ["LOCAL_RANK"])
         torch_distrib.barrier()
-        print(self.trainer.global_rank, "barrier 6")
-        # self.barrier('ddp_setup')
-        self.trainer.train_loop.setup_training(model)
-
-        # train or test
-        results = self.train_or_test()
-
-        # clean up memory
-        torch.cuda.empty_cache()
-
-        return results
+        # print(self.trainer.global_rank, "barrier 6")
+        # # self.barrier('ddp_setup')
+        # self.trainer.train_loop.setup_training(model)
+        #
+        # # train or test
+        # results = self.train_or_test()
+        #
+        # # clean up memory
+        # torch.cuda.empty_cache()
+        raise SystemExit()
+        # return results
 
     def configure_ddp(
             self, model: LightningModule, device_ids: List[int]
