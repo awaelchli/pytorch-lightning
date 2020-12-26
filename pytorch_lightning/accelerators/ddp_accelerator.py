@@ -257,6 +257,8 @@ class DDPAccelerator(Accelerator):
                 torch_backend, rank=self.trainer.global_rank, world_size=self.trainer.world_size
             )
 
+        torch.distributed.barrier()
+
         torch.cuda.set_device(torch.device("cuda", process_idx))
         device_ids = self.get_device_ids()
         self.model_to_device(model)
