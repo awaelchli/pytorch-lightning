@@ -253,16 +253,12 @@ class DDPAccelerator(Accelerator):
         )
 
         # call setup after the ddp process has connected
-        self.trainer.call_setup_hook(model)
+        # self.trainer.call_setup_hook(model)
 
         # call sync_bn before .cuda(), configure_apex and configure_ddp
         # if self.trainer.sync_batchnorm:
         #     model = self.configure_sync_batchnorm(model)
 
-        # self.setup_optimizers(model)
-        # self.trainer.model_connector.copy_trainer_model_properties(model)
-        # model = self.trainer.precision_connector.connect(model)
-        # self.trainer.convert_to_lightning_optimizers()
         self.init_device(process_idx)
         device_ids = self.get_device_ids()
         self.model_to_device(model)
