@@ -246,18 +246,18 @@ class DDPAccelerator(Accelerator):
         # try to init for 20 times at max in case ports are taken
         # where to store ip_table
         model.trainer = self.trainer
-
-        os.environ["MASTER_ADDR"] = "localhost"
-        os.environ["MASTER_PORT"] = "123445"
-        os.environ["WORLD_SIZE"] = "2"
-        torch_backend = "nccl"
+        self.init_ddp_connection(global_rank=self.trainer.global_rank, world_size=2, is_slurm_managing_tasks=False)
+        # os.environ["MASTER_ADDR"] = "localhost"
+        # os.environ["MASTER_PORT"] = "123445"
+        # os.environ["WORLD_SIZE"] = "2"
+        # torch_backend = "nccl"
 
         torch.cuda.set_device(torch.device("cuda", process_idx))
 
-        if not torch_distrib.is_initialized():
-            torch_distrib.init_process_group(
-                torch_backend, rank=self.trainer.global_rank, world_size=self.trainer.world_size
-            )
+        # if not torch_distrib.is_initialized():
+        #     torch_distrib.init_process_group(
+        #         torch_backend, rank=self.trainer.global_rank, world_size=self.trainer.world_size
+        #     )
 
         torch.distributed.barrier()
 
