@@ -252,6 +252,8 @@ class DDPAccelerator(Accelerator):
         os.environ["WORLD_SIZE"] = "2"
         torch_backend = "nccl"
 
+        torch.cuda.set_device(torch.device("cuda", process_idx))
+
         if not torch_distrib.is_initialized():
             torch_distrib.init_process_group(
                 torch_backend, rank=self.trainer.global_rank, world_size=self.trainer.world_size
@@ -259,7 +261,7 @@ class DDPAccelerator(Accelerator):
 
         torch.distributed.barrier()
 
-        torch.cuda.set_device(torch.device("cuda", process_idx))
+
         device_ids = self.get_device_ids()
         self.model_to_device(model)
         model = DistributedDataParallel(model, device_ids=device_ids)
@@ -273,8 +275,8 @@ class DDPAccelerator(Accelerator):
         #
         # # clean up memory
         torch.cuda.empty_cache()
-        raise SystemExit()
-        # return results
+
+        return results
 
     def configure_ddp(
             self, model: LightningModule, device_ids: List[int]
