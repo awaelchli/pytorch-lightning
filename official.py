@@ -72,3 +72,7 @@ def run_demo(demo_fn, world_size):
              args=(world_size,),
              nprocs=world_size,
              join=True)
+
+
+if __name__ == "__main__":
+    run_demo(demo_basic, 2)
