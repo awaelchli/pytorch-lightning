@@ -279,6 +279,8 @@ class DDPAccelerator(Accelerator):
 
         model = self.trainer.precision_connector.connect(model)
 
+        self.trainer.convert_to_lightning_optimizers()
+
         device_ids = self.get_device_ids()
 
         model = self.configure_ddp(model, device_ids=device_ids)
