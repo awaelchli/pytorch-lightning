@@ -282,6 +282,15 @@ class DDPAccelerator(Accelerator):
 
         self.trainer.root_gpu = self.trainer.data_parallel_device_ids[self.trainer.local_rank]
 
+        if isinstance(self.ddp_plugin, RPCPlugin):
+            if not self.ddp_plugin.is_main_rpc_process:
+                self.ddp_plugin.on_accelerator_exit_rpc_process(self.trainer)
+                self.ddp_plugin.exit_rpc_process()
+                if self.ddp_plugin.return_after_exit_rpc_process:
+                    return
+            else:
+                self.ddp_plugin.on_main_rpc_connection(self.trainer)
+
         self.trainer.call_setup_hook(model)
 
         if self.trainer.is_global_zero and not torch.distributed.is_initialized():
