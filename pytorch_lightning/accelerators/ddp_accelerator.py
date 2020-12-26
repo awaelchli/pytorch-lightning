@@ -257,14 +257,13 @@ class DDPAccelerator(Accelerator):
         os.environ["MASTER_ADDR"] = str(self.cluster_environment.master_address())
         os.environ["MASTER_PORT"] = str(self.cluster_environment.master_port())
         os.environ["WORLD_SIZE"] = "2"  # str(cluster_environment.world_size())
-        torch_backend = "nccl" if self.trainer.on_gpu else "gloo"
 
         print(self.trainer.global_rank, "WORLD SIZE", self.trainer.world_size, self.cluster_environment.world_size())
         # assert world_size == int(cluster_environment.world_size())
 
         if not torch_distrib.is_initialized():
             torch_distrib.init_process_group(
-                torch_backend, rank=self.trainer.global_rank, world_size=self.trainer.world_size
+                "nccl", rank=self.trainer.global_rank, world_size=self.trainer.world_size
             )
 
         torch_distrib.barrier()
