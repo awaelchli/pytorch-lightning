@@ -33,7 +33,7 @@ if HOROVOD_AVAILABLE:
 else:
     print('You requested to import Horovod which is missing or not supported for your OS.')
 
-from tests.base import EvalModelTemplate  # noqa: E402
+from tests.base.model_template import EvalModelTemplate  # noqa: E402
 from tests.base.develop_pipelines import run_prediction  # noqa: E402
 from tests.base.develop_utils import set_random_master_port, reset_seed  # noqa: E402
 
