@@ -507,7 +507,7 @@ class Trainer(
 
         # track model now.
         # if cluster resets state, the model will update with the saved weights
-        self.model = model
+        # self.model = model
         
         self.train_loop.setup_training(model)
 
