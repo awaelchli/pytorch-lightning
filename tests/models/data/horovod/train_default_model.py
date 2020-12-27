@@ -25,7 +25,8 @@ import sys
 sys.path = os.getenv('PYTHONPATH').split(':') + sys.path
 p = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 print("sys path", sys.path)
-# sys.path.insert(0, p)
+print(p)
+sys.path.insert(0, os.path.join(p, "tests"))
 # sys.path.insert(0, os.path.join(p, "base"))
 
 from pytorch_lightning import Trainer  # noqa: E402
