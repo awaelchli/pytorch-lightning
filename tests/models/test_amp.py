@@ -146,10 +146,10 @@ def test_amp_gpu_ddp_slurm_managed(tmpdir):
 
     # test root model address
     assert isinstance(trainer.training_type_plugin.cluster_environment, SLURMEnvironment)
-    assert trainer.accelerator_connector.cluster_environment.resolve_root_node_address('abc') == 'abc'
-    assert trainer.accelerator_connector.cluster_environment.resolve_root_node_address('abc[23]') == 'abc23'
-    assert trainer.accelerator_connector.cluster_environment.resolve_root_node_address('abc[23-24]') == 'abc23'
-    assert trainer.accelerator_connector.cluster_environment.resolve_root_node_address('abc[23-24, 45-40, 40]') == 'abc23'
+    assert trainer.training_type_plugin.cluster_environment.resolve_root_node_address('abc') == 'abc'
+    assert trainer.training_type_plugin.cluster_environment.resolve_root_node_address('abc[23]') == 'abc23'
+    assert trainer.training_type_plugin.cluster_environment.resolve_root_node_address('abc[23-24]') == 'abc23'
+    assert trainer.training_type_plugin.cluster_environment.resolve_root_node_address('abc[23-24, 45-40, 40]') == 'abc23'
 
 
 @pytest.mark.parametrize("enable_pl_optimizer", [False, True])
