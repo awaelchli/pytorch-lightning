@@ -22,11 +22,11 @@ import os
 import sys
 
 # this is need as e.g. Conda do not uses `PYTHONPATH` env var as pip or/and virtualenv
-sys.path = os.getenv('PYTHONPATH').split(':') + sys.path
-p = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
-print("sys path", sys.path)
-print(p)
-sys.path.insert(0, os.path.join(p, "tests"))
+# sys.path = os.getenv('PYTHONPATH').split(':') + sys.path
+# p = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+# print("sys path", sys.path)
+# print(p)
+# sys.path.insert(0, os.path.join(p, "tests"))
 # sys.path.insert(0, os.path.join(p, "base"))
 
 from pytorch_lightning import Trainer  # noqa: E402
