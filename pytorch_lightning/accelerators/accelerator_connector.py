@@ -92,6 +92,9 @@ class BackendConnector(object):
         if "LOCAL_RANK" in os.environ:
             rank_zero_only.rank = int(os.environ["LOCAL_RANK"])
 
+        # TODO: is this still needed? we have a decorator for Trainer.init that parses PL env variables
+        gpus = os.environ.get('PL_TRAINER_GPUS', gpus)
+
         # for gpus allow int, string and gpu list
         if auto_select_gpus and isinstance(gpus, int):
             self.gpus = pick_multiple_gpus(gpus)
