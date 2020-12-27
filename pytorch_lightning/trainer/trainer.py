@@ -503,11 +503,6 @@ class Trainer(
         # SET UP TRAINING
         # ----------------------------
         self.accelerator_backend.setup(self, model)
-
-        # track model now.
-        # if cluster resets state, the model will update with the saved weights
-        # self.model = model
-        
         self.train_loop.setup_training(model)
 
         # ----------------------------
@@ -905,7 +900,6 @@ class Trainer(
         self.tested_ckpt_path = ckpt_path
         self.testing = True
         os.environ["PL_TESTING_MODE"] = "1"
-        # self.model = model
         results = self.fit(model)
         self.testing = False
         del os.environ["PL_TESTING_MODE"]
@@ -926,7 +920,6 @@ class Trainer(
         # run test
         # sets up testing so we short circuit to eval
         self.testing = True
-        # self.model = model
         results = self.fit(model)
         self.testing = False
 

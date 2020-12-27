@@ -77,7 +77,6 @@ def run_model_test(trainer_options, model, on_gpu: bool = True, version=None, wi
     if with_hpc:
         if trainer.use_ddp or trainer.use_ddp2:
             # on hpc this would work fine... but need to hack it for the purpose of the test
-            # trainer.model = pretrained_model
             trainer.optimizers, trainer.lr_schedulers, trainer.optimizer_frequencies = \
                 trainer.init_optimizers(pretrained_model)
 
