@@ -26,6 +26,7 @@ sys.path = os.getenv('PYTHONPATH').split(':') + sys.path
 p = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 print("added path", p)
 sys.path.insert(0, p)
+sys.path.insert(0, os.path.join(p, "base"))
 
 from pytorch_lightning import Trainer  # noqa: E402
 from pytorch_lightning.callbacks import ModelCheckpoint  # noqa: E402
