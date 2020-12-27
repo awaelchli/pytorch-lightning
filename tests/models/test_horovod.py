@@ -50,7 +50,7 @@ finally:
     HOROVOD_NCCL_AVAILABLE = True
 
 
-p = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+p = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 print("sys path", sys.path)
 print(p)
 sys.path.insert(0, p)
