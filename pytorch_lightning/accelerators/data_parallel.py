@@ -314,6 +314,8 @@ class DDPPlugin(ParallelPlugin):
         self._has_spawned_children = False
         self.task_idx = None
         self.num_processes = len(parallel_devices)
+        self.local_rank = self.determine_local_rank()
+        self.node_rank = self.determine_node_rank()
 
     @property
     def root_device(self):
@@ -549,6 +551,9 @@ class DDPSpawnPlugin(ParallelPlugin):
         self._ddp_kwargs = kwargs
         self.dist = LightningDistributed()
         self.num_processes = len(parallel_devices)
+        # TODO: manage local- and node_rank by cluster plugin?
+        self.local_rank = self.determine_local_rank()
+        self.node_rank = self.determine_node_rank()
         self.mp_queue = None
 
     @property
