@@ -504,11 +504,12 @@ class Trainer(
         # SET UP TRAINING
         # ----------------------------
         self.accelerator_backend.setup(self, model)
-        self.train_loop.setup_training(model)
 
         # track model now.
         # if cluster resets state, the model will update with the saved weights
         self.model = model
+        
+        self.train_loop.setup_training(model)
 
         # ----------------------------
         # INSPECT THESE FOR MAIN LOOPS
