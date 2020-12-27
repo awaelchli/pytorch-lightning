@@ -336,7 +336,7 @@ class DDPPlugin(ParallelPlugin):
         if self.is_slurm_managing_tasks:
             return int(os.environ['SLURM_LOCALID'])
         else:
-            return super().determine_node_rank()
+            return super().determine_local_rank()
 
     def determine_node_rank(self):
         if self.is_slurm_managing_tasks:
@@ -708,7 +708,7 @@ class DDPSpawnPlugin(ParallelPlugin):
         if self.is_slurm_managing_tasks:
             return int(os.environ['SLURM_LOCALID'])
         else:
-            return super().determine_node_rank()
+            return super().determine_local_rank()
 
     def determine_node_rank(self):
         if self.is_slurm_managing_tasks:
