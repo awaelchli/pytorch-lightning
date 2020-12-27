@@ -50,11 +50,13 @@ finally:
     HOROVOD_NCCL_AVAILABLE = True
 
 
-p = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-print("sys path", sys.path)
-print(p)
-sys.path.insert(0, p)
+# p = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+# print("sys path", sys.path)
+# print(p)
+# sys.path.insert(0, p)
 
+# env['PYTHONPATH'] = f'{pytorch_lightning.__file__}:' + env.get('PYTHONPATH', '')
+print(sys.executable)
 
 
 def _run_horovod(trainer_options, on_gpu=False):
