@@ -354,7 +354,7 @@ class Trainer(
         self.train_loop = TrainLoop(self, multiple_trainloader_mode)
 
         # training state
-        self.model = None
+        self.weights_summary = weights_summary
         self.shown_warnings = set()
 
         # init callbacks
@@ -589,11 +589,6 @@ class Trainer(
                 ref_model.summarize(mode=self.weights_summary)
             else:
                 raise MisconfigurationException("weights_summary can be None, " + ", ".join(ModelSummary.MODES))
-
-        # TODO: what the heck is this
-        # track model now.
-        # if cluster resets state, the model will update with the saved weights
-        # self.trainer.model = model
 
         # restore training and model before hpc is called
         self.checkpoint_connector.restore_weights(ref_model)
@@ -919,7 +914,6 @@ class Trainer(
         self.tested_ckpt_path = ckpt_path
         self.testing = True
         os.environ["PL_TESTING_MODE"] = "1"
-        self.model = model
         results = self.fit(model)
         self.testing = False
         del os.environ["PL_TESTING_MODE"]
@@ -940,7 +934,6 @@ class Trainer(
         # run test
         # sets up testing so we short circuit to eval
         self.testing = True
-        self.model = model
         results = self.fit(model)
         self.testing = False
 
