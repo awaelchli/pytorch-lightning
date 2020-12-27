@@ -50,6 +50,13 @@ finally:
     HOROVOD_NCCL_AVAILABLE = True
 
 
+p = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+print("sys path", sys.path)
+print(p)
+sys.path.insert(0, p)
+
+
+
 def _run_horovod(trainer_options, on_gpu=False):
     """Execute the training script across multiple workers in parallel."""
     num_processes = trainer_options.get('gpus', 2)
