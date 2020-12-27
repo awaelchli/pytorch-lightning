@@ -506,6 +506,10 @@ class Trainer(
         self.accelerator_backend.setup(self, model)
         self.train_loop.setup_training(model)
 
+        # track model now.
+        # if cluster resets state, the model will update with the saved weights
+        self.model = model
+
         # ----------------------------
         # INSPECT THESE FOR MAIN LOOPS
         # ----------------------------
@@ -576,11 +580,6 @@ class Trainer(
                 ref_model.summarize(mode=self.weights_summary)
             else:
                 raise MisconfigurationException("weights_summary can be None, " + ", ".join(ModelSummary.MODES))
-
-        # TODO: what the heck is this
-        # track model now.
-        # if cluster resets state, the model will update with the saved weights
-        # self.trainer.model = model
 
         # restore training and model before hpc is called
         self.checkpoint_connector.restore_weights(ref_model)
