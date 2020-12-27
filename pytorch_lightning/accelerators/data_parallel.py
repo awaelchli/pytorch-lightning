@@ -314,6 +314,7 @@ class DDPPlugin(ParallelPlugin):
         self._has_spawned_children = False
         self.task_idx = None
         self.num_processes = len(parallel_devices)
+        # TODO: manage local- and node_rank by cluster plugin?
         self.local_rank = self.determine_local_rank()
         self.node_rank = self.determine_node_rank()
 
