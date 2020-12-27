@@ -109,11 +109,17 @@ def test_amp_multi_gpu_ddp_spawn(tmpdir):
 
 
 @pytest.mark.skipif(torch.cuda.device_count() < 2, reason="test requires multi-GPU machine")
+@mock.patch.dict(os.environ, {
+    "SLURM_NTASKS": "1",
+    "SLURM_JOB_NAME": "SOME_NAME",
+    "SLURM_NODEID": "0",
+    "LOCAL_RANK": "0",
+    "SLURM_LOCALID": "0"
+})
 def test_amp_gpu_ddp_slurm_managed(tmpdir):
     """Make sure DDP + AMP work."""
     # simulate setting slurm flags
     tutils.set_random_master_port()
-    os.environ['SLURM_LOCALID'] = str(0)
 
     model = EvalModelTemplate()
 
@@ -133,7 +139,6 @@ def test_amp_gpu_ddp_slurm_managed(tmpdir):
         callbacks=[checkpoint],
         logger=logger,
     )
-    trainer.is_slurm_managing_tasks = True
     result = trainer.fit(model)
 
     # correct result and ok accuracy
