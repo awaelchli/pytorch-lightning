@@ -18,7 +18,7 @@ import torch
 
 from pytorch_lightning.accelerators.accelerator import NewCPUAccelerator, NewAccelerator, NewGPUAccelerator
 from pytorch_lightning.accelerators.data_parallel import SingleDevicePlugin, DDPPlugin, DDPSpawnPlugin, \
-    DataParallelPlugin, DDP2Plugin
+    DataParallelPlugin, DDP2Plugin, HorovodPlugin
 from pytorch_lightning.accelerators.precision import ApexMixedPrecisionPlugin, NativeMixedPrecisionPlugin, PrecisionPlugin
 from pytorch_lightning.tuner.auto_gpu_select import pick_multiple_gpus
 from pytorch_lightning.utilities import AMPType, APEX_AVAILABLE, NATIVE_AMP_AVAILABLE, device_parser
@@ -236,7 +236,7 @@ class BackendConnector(object):
         elif self.use_dp:
             plugin = DataParallelPlugin(parallel_devices=self.parallel_devices)
         elif self.use_horovod:
-            raise NotImplementedError
+            plugin = HorovodPlugin(parallel_devices=self.parallel_devices, cluster_environment=cluster_environment)
         else:
             plugin = SingleDevicePlugin(device=torch.device(f"cuda:{self.root_gpu}" if self.on_gpu else "cpu"))
         return plugin
