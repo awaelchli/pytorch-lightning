@@ -737,6 +737,8 @@ class HorovodPlugin(ParallelPlugin):
 
         # TODO: check if correct
         self.local_rank = hvd.local_rank()
+        print(f"LOCAL RANK {self.local_rank}-----------------------------------------------------")
+        print(f"devices {self.parallel_devices}-----------------------------------------------------")
 
         # Horovod: pin GPU to local rank
         # assert self.trainer.root_gpu == hvd.local_rank()
