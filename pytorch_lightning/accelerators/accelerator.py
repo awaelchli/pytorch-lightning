@@ -1,4 +1,4 @@
-from pytorch_lightning.accelerators.data_parallel import ParallelPlugin, TrainingTypePlugin
+from pytorch_lightning.accelerators.data_parallel import ParallelPlugin, TrainingTypePlugin, HorovodPlugin
 from pytorch_lightning.accelerators.base_plugin import Plugin
 from pytorch_lightning.utilities.exceptions import MisconfigurationException
 from pytorch_lightning.utilities import NATIVE_AMP_AVAILABLE, AMPType
@@ -111,9 +111,15 @@ class NewAccelerator(object):
         return dataloader
 
     def backward(self, closure_loss, optimizer, opt_idx, should_accumulate, *args, **kwargs):
-        return self.precision_plugin.backward(
+        output = self.precision_plugin.backward(
             self.lightning_module, closure_loss, optimizer, opt_idx, should_accumulate, *args, **kwargs
         )
+
+        # TODO: this is a hack, find a better solution for this (hook?)
+        if isinstance(self.training_type_plugin, HorovodPlugin):
+            optimizer.synchronize()
+
+        return output
 
     def optimizer_step(self, optimizer, current_epoch, batch_idx, opt_idx, lambda_closure):
         model_ref = self.lightning_module
