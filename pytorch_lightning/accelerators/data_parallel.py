@@ -5,6 +5,7 @@ from contextlib import contextmanager, ExitStack
 from torch.optim.lr_scheduler import _LRScheduler
 
 from pytorch_lightning.cluster_environments import TorchElasticEnvironment, ClusterEnvironment
+from pytorch_lightning.core.optimizer import LightningOptimizer
 from pytorch_lightning.utilities import HOROVOD_AVAILABLE
 from pytorch_lightning.utilities.cloud_io import atomic_save, load as pl_load
 from pytorch_lightning.accelerators.base_plugin import Plugin
@@ -754,9 +755,12 @@ class HorovodPlugin(ParallelPlugin):
         # allow for lr schedulers as well
         # self.setup_optimizers(model)
 
+        optimizers = self.lightning_module.trainer.optimizers
+        if isinstance(optimizers, LightningOptimizer):
+            optimizers = [opt._optimier for opt in optimizers]
+
         # Horovod: scale the learning rate by the number of workers to account for
         # increased total batch size
-        optimizers = self.lightning_module.trainer.optimizers
         for optimizer in optimizers:
             for param_group in optimizer.param_groups:
                 param_group['lr'] *= hvd.size()
@@ -782,6 +786,8 @@ class HorovodPlugin(ParallelPlugin):
             hvd.DistributedOptimizer(optimizer, named_parameters=_filter_named_parameters(self.lightning_module, optimizer))
             for optimizer in optimizers
         ]
+
+        optimizers = self.lightning_module.trainer.convert_to_lightning_optimizers(optimizers)
         self.lightning_module.trainer.optimizers = optimizers
 
         # 16-bit
