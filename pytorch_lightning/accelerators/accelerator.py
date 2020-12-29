@@ -111,11 +111,9 @@ class NewAccelerator(object):
         return dataloader
 
     def backward(self, closure_loss, optimizer, opt_idx, should_accumulate, *args, **kwargs):
-        x = self.precision_plugin.backward(
+        return self.precision_plugin.backward(
             self.lightning_module, closure_loss, optimizer, opt_idx, should_accumulate, *args, **kwargs
         )
-        optimizer.synchronize()
-        return x
 
     def optimizer_step(self, optimizer, current_epoch, batch_idx, opt_idx, lambda_closure):
 

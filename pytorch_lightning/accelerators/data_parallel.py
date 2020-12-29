@@ -835,6 +835,9 @@ class HorovodPlugin(ParallelPlugin):
         # Make sure all workers have finished training before returning to the user
         hvd.join()
 
+    def pre_optimizer_step(self, optimizer, optimizer_idx):
+        optimizer.synchronize()
+
     def barrier(self, *args, **kwargs):
         hvd.join()
 
