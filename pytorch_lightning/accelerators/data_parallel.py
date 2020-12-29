@@ -728,7 +728,7 @@ class HorovodPlugin(ParallelPlugin):
         return distributed_sampler_kwargs
 
     def setup(self, model):
-        pass
+        self._model = model
 
     def pre_training(self):
         # TODO: this is not consistent with other backends
