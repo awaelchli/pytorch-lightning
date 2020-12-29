@@ -707,15 +707,7 @@ class DDP2Plugin(DDPPlugin):
     pass
 
 
-# TODO: Horovod
 class HorovodPlugin(ParallelPlugin):
-
-    def __init__(
-        self,
-        parallel_devices,
-        cluster_environment: Optional[ClusterEnvironment] = None,
-    ):
-        super().__init__(parallel_devices=parallel_devices, cluster_environment=cluster_environment)
 
     @property
     def root_device(self):
@@ -784,7 +776,6 @@ class HorovodPlugin(ParallelPlugin):
                 stack.enter_context(optimizer.skip_synchronize())
 
             # set up training routine
-            # self.trainer.train_loop.setup_training(self.trainer.model)
             self._results = trainer.train()
 
         # Make sure all workers have finished training before returning to the user
