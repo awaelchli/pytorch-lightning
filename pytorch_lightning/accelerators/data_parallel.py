@@ -736,6 +736,7 @@ class HorovodPlugin(ParallelPlugin):
         # self.trainer.call_setup_hook(model)
 
         # TODO: check if correct
+        self.global_rank = hvd.rank()
         self.local_rank = hvd.local_rank()
         print(f"LOCAL RANK {self.local_rank}-----------------------------------------------------")
         print(f"devices {self.parallel_devices}-----------------------------------------------------")

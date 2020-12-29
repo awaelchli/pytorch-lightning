@@ -364,7 +364,10 @@ class BackendConnector(object):
         hvd.init()
         if self.on_gpu:
             # Horovod assigns one local GPU per process
+            self.parallel_device_ids = list(range(hvd.local_size()))
             self.root_gpu = hvd.local_rank()
+        else:
+            self.num_processes = hvd.local_size()
 
     def check_horovod(self):
         """Raises a `MisconfigurationException` if the Trainer is not configured correctly for Horovod."""
