@@ -729,8 +729,7 @@ class HorovodPlugin(ParallelPlugin):
 
     def setup(self, model):
         self._model = model
-
-    def pre_training(self):
+        
         # TODO: this is not consistent with other backends
         # call setup after the ddp process has connected
         # self.trainer.call_setup_hook(model)
