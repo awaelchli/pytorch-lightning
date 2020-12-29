@@ -793,7 +793,7 @@ class HorovodPlugin(ParallelPlugin):
 
         print("DEBUG: conversion to Loptim in plugin")
         optimizers = self.lightning_module.trainer.convert_to_lightning_optimizers(optimizers)
-        print(f"DEBUG: after conversion: {optimizers}")
+        print(f"DEBUG: after conversion: {type(optimizers[0])}")
         self.lightning_module.trainer.optimizers = optimizers
 
 
