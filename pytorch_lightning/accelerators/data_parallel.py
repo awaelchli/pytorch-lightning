@@ -738,6 +738,7 @@ class HorovodPlugin(ParallelPlugin):
         # TODO: check if correct
         self.global_rank = hvd.rank()
         self.local_rank = hvd.local_rank()
+        rank_zero_only.rank = self.global_rank
         print(f"LOCAL RANK {self.local_rank}-----------------------------------------------------")
         print(f"devices {self.parallel_devices}-----------------------------------------------------")
 
@@ -790,8 +791,6 @@ class HorovodPlugin(ParallelPlugin):
 
         # Update logger rank info from Horovod to avoid race conditions from  different ranks
         # creating directories / writing files in the same locations.
-        self.global_rank = hvd.rank()
-        rank_zero_only.rank = self.global_rank
 
         # self.trainer.model = model
 
