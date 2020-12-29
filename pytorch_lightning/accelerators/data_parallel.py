@@ -198,6 +198,7 @@ class ParallelPlugin(TrainingTypePlugin, ABC):
         raise NotImplementedError
 
     def connect(self, model, *args, **kwargs):
+        print("DEBUG: start setup for plugin")
         self.setup(model)
         return self.model
 
@@ -731,6 +732,7 @@ class HorovodPlugin(ParallelPlugin):
     def setup(self, model):
         self._model = model
 
+        print("DEBUG: in setup for plugin")
         # TODO: this is not consistent with other backends
         # call setup after the ddp process has connected
         # self.trainer.call_setup_hook(model)
@@ -754,6 +756,8 @@ class HorovodPlugin(ParallelPlugin):
         # CHOOSE OPTIMIZER
         # allow for lr schedulers as well
         # self.setup_optimizers(model)
+
+        print("DEBUG: start pre_training")
 
         optimizers = self.lightning_module.trainer.optimizers
         if isinstance(optimizers, LightningOptimizer):
@@ -787,8 +791,11 @@ class HorovodPlugin(ParallelPlugin):
             for optimizer in optimizers
         ]
 
+        print("DEBUG: conversion to Loptim in plugin")
         optimizers = self.lightning_module.trainer.convert_to_lightning_optimizers(optimizers)
         self.lightning_module.trainer.optimizers = optimizers
+
+
 
         # 16-bit
         # model = self.trainer.precision_connector.connect(model)

@@ -34,9 +34,13 @@ class NewAccelerator(object):
         self.optimizer_frequencies = None
 
     def setup(self, trainer, model):
+        print("DEBUG:connect training type plugin")
         self.connect_training_type_plugin(self.training_type_plugin, model)
+        print("DEBUG: setup optims")
         self.setup_optimizers(trainer, model)
+        print("DEBUG: connect precision")
         self.connect_precision_plugin(self.precision_plugin)
+        print("DEBUG: convert in setup")
         self.optimizers = trainer.convert_to_lightning_optimizers(self.optimizers)
 
     @property
