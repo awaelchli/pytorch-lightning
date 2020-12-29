@@ -738,11 +738,11 @@ class HorovodPlugin(ParallelPlugin):
         # self.trainer.call_setup_hook(model)
 
         # TODO: check if correct
-        self.global_rank = hvd.rank()
+
         self.local_rank = hvd.local_rank()
-        rank_zero_only.rank = self.global_rank
-        print(f"LOCAL RANK {self.local_rank}-----------------------------------------------------")
-        print(f"devices {self.parallel_devices}-----------------------------------------------------")
+
+        # print(f"LOCAL RANK {self.local_rank}-----------------------------------------------------")
+        # print(f"devices {self.parallel_devices}-----------------------------------------------------")
 
         # Horovod: pin GPU to local rank
         # assert self.trainer.root_gpu == hvd.local_rank()
@@ -793,6 +793,7 @@ class HorovodPlugin(ParallelPlugin):
 
         print("DEBUG: conversion to Loptim in plugin")
         optimizers = self.lightning_module.trainer.convert_to_lightning_optimizers(optimizers)
+        print(f"DEBUG: after conversion: {optimizers}")
         self.lightning_module.trainer.optimizers = optimizers
 
 
@@ -806,6 +807,8 @@ class HorovodPlugin(ParallelPlugin):
         # creating directories / writing files in the same locations.
 
         # self.trainer.model = model
+        self.global_rank = hvd.rank()
+        rank_zero_only.rank = self.global_rank
 
     def start_training(self, trainer):
         print("trainer optims", trainer.optimizers)
