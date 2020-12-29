@@ -759,8 +759,11 @@ class HorovodPlugin(ParallelPlugin):
 
         print("DEBUG: start pre_training")
 
+        def _unpack_lightning_optimizer(opt):
+            return opt._optimizer if isinstance(opt, LightningOptimizer) else opt
+
         optimizers = self.lightning_module.trainer.optimizers
-        optimizers = [opt._optimizer for opt in optimizers if isinstance(opt, LightningOptimizer)]
+        optimizers = [_unpack_lightning_optimizer(opt) for opt in optimizers]
 
         # Horovod: scale the learning rate by the number of workers to account for
         # increased total batch size
