@@ -729,7 +729,7 @@ class HorovodPlugin(ParallelPlugin):
 
     def setup(self, model):
         self._model = model
-        
+
         # TODO: this is not consistent with other backends
         # call setup after the ddp process has connected
         # self.trainer.call_setup_hook(model)
@@ -745,6 +745,7 @@ class HorovodPlugin(ParallelPlugin):
         # assert self.trainer.root_gpu == hvd.local_rank()
         self.model_to_device()
 
+    def pre_training(self):
         # avoid duplicating progress bar
         # if hvd.rank() != 0 and self.trainer.progress_bar_callback is not None:
         #     self.trainer.progress_bar_callback.disable()
@@ -794,6 +795,9 @@ class HorovodPlugin(ParallelPlugin):
         # self.trainer.model = model
 
     def start_training(self, trainer):
+        print("trainer optims", trainer.optimizers)
+        print("acc optims", trainer.accelerator.optimizers)
+
         with ExitStack() as stack:
             for optimizer in trainer.optimizers:
                 # Synchronization will be performed explicitly following backward()
