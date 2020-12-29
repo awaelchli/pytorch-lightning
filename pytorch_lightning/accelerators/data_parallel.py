@@ -765,7 +765,7 @@ class HorovodPlugin(ParallelPlugin):
                 scheduler.base_lrs = [lr * hvd.size() for lr in scheduler.base_lrs]
 
         # Horovod: broadcast parameters & optimizer state to ensure consistent initialization
-        hvd.broadcast_parameters(self.lightning_module.model.state_dict(), root_rank=0)
+        hvd.broadcast_parameters(self.lightning_module.state_dict(), root_rank=0)
         for optimizer in optimizers:
             hvd.broadcast_optimizer_state(optimizer, root_rank=0)
 
