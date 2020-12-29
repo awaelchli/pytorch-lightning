@@ -732,32 +732,13 @@ class HorovodPlugin(ParallelPlugin):
     def setup(self, model):
         self._model = model
 
-        print("DEBUG: in setup for plugin")
-        # TODO: this is not consistent with other backends
-        # call setup after the ddp process has connected
-        # self.trainer.call_setup_hook(model)
-
-        # TODO: check if correct
-
+        self.global_rank = hvd.rank()
         self.local_rank = hvd.local_rank()
+        rank_zero_only.rank = self.global_rank
 
-        # print(f"LOCAL RANK {self.local_rank}-----------------------------------------------------")
-        # print(f"devices {self.parallel_devices}-----------------------------------------------------")
-
-        # Horovod: pin GPU to local rank
-        # assert self.trainer.root_gpu == hvd.local_rank()
         self.model_to_device()
 
     def pre_training(self):
-        # avoid duplicating progress bar
-        # if hvd.rank() != 0 and self.trainer.progress_bar_callback is not None:
-        #     self.trainer.progress_bar_callback.disable()
-
-        # CHOOSE OPTIMIZER
-        # allow for lr schedulers as well
-        # self.setup_optimizers(model)
-
-        print("DEBUG: start pre_training")
 
         def _unpack_lightning_optimizer(opt):
             return opt._optimizer if isinstance(opt, LightningOptimizer) else opt
@@ -796,24 +777,7 @@ class HorovodPlugin(ParallelPlugin):
         optimizers = self.lightning_module.trainer.convert_to_lightning_optimizers(optimizers)
         self.lightning_module.trainer.optimizers = optimizers
 
-
-
-        # 16-bit
-        # model = self.trainer.precision_connector.connect(model)
-
-        # self.trainer.convert_to_lightning_optimizers()
-
-        # Update logger rank info from Horovod to avoid race conditions from  different ranks
-        # creating directories / writing files in the same locations.
-
-        # self.trainer.model = model
-        self.global_rank = hvd.rank()
-        rank_zero_only.rank = self.global_rank
-
     def start_training(self, trainer):
-        print("trainer optims", trainer.optimizers)
-        print("acc optims", trainer.accelerator.optimizers)
-
         with ExitStack() as stack:
             for optimizer in trainer.optimizers:
                 # Synchronization will be performed explicitly following backward()
