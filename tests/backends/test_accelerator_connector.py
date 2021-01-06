@@ -19,7 +19,9 @@ import pytest
 import torch
 
 from pytorch_lightning import Trainer
-from pytorch_lightning.accelerators.accelerator import NewCPUAccelerator, NewGPUAccelerator, NewAccelerator
+from pytorch_lightning.accelerators.accelerator import Accelerator
+from pytorch_lightning.accelerators.cpu import CPUAccelerator
+from pytorch_lightning.accelerators.gpu import GPUAccelerator
 from pytorch_lightning.accelerators.data_parallel import SingleDevicePlugin, DDPPlugin, DDPSpawnPlugin, DDP2Plugin, \
     TrainingTypePlugin
 from pytorch_lightning.accelerators.precision import PrecisionPlugin
@@ -32,7 +34,7 @@ def test_accelerator_choice_cpu(tmpdir):
     trainer = Trainer(
         fast_dev_run=True,
     )
-    assert isinstance(trainer.accelerator_backend, NewCPUAccelerator)
+    assert isinstance(trainer.accelerator_backend, CPUAccelerator)
     assert isinstance(trainer.training_type_plugin, SingleDevicePlugin)
 
 
@@ -41,7 +43,7 @@ def test_accelerator_choice_ddp_cpu(tmpdir):
         fast_dev_run=True,
         accelerator='ddp_cpu',
     )
-    assert isinstance(trainer.accelerator_backend, NewCPUAccelerator)
+    assert isinstance(trainer.accelerator_backend, CPUAccelerator)
     assert isinstance(trainer.training_type_plugin, DDPSpawnPlugin)
     assert isinstance(trainer.training_type_plugin.cluster_environment, TorchElasticEnvironment)
 
@@ -54,7 +56,7 @@ def test_accelerator_choice_ddp(tmpdir):
         accelerator='ddp',
         gpus=1,
     )
-    assert isinstance(trainer.accelerator_backend, NewGPUAccelerator)
+    assert isinstance(trainer.accelerator_backend, GPUAccelerator)
     assert isinstance(trainer.training_type_plugin, DDPPlugin)
     assert isinstance(trainer.training_type_plugin.cluster_environment, TorchElasticEnvironment)
 
@@ -67,7 +69,7 @@ def test_accelerator_choice_ddp_spawn(tmpdir):
         accelerator='ddp_spawn',
         gpus=1,
     )
-    assert isinstance(trainer.accelerator_backend, NewGPUAccelerator)
+    assert isinstance(trainer.accelerator_backend, GPUAccelerator)
     assert isinstance(trainer.training_type_plugin, DDPSpawnPlugin)
     assert isinstance(trainer.training_type_plugin.cluster_environment, TorchElasticEnvironment)
 
@@ -85,7 +87,7 @@ def test_accelerator_choice_ddp_slurm(tmpdir):
         def on_fit_start(self, trainer, pl_module):
             assert trainer.use_ddp
             assert trainer.accelerator_connector.is_slurm_managing_tasks
-            assert isinstance(trainer.accelerator_backend, NewGPUAccelerator)
+            assert isinstance(trainer.accelerator_backend, GPUAccelerator)
             assert isinstance(trainer.training_type_plugin, DDPPlugin)
             assert isinstance(trainer.training_type_plugin.cluster_environment, SLURMEnvironment)
             assert trainer.training_type_plugin.task_idx == 10
@@ -118,7 +120,7 @@ def test_accelerator_choice_ddp2_slurm(tmpdir):
         def on_fit_start(self, trainer, pl_module):
             assert trainer.use_ddp2
             assert trainer.accelerator_connector.is_slurm_managing_tasks
-            assert isinstance(trainer.accelerator_backend, NewGPUAccelerator)
+            assert isinstance(trainer.accelerator_backend, GPUAccelerator)
             assert isinstance(trainer.training_type_plugin, DDP2Plugin)
             assert isinstance(trainer.training_type_plugin.cluster_environment, SLURMEnvironment)
             assert trainer.training_type_plugin.task_idx == 10
@@ -149,7 +151,7 @@ def test_accelerator_choice_ddp_te(tmpdir):
     class CB(Callback):
         def on_fit_start(self, trainer, pl_module):
             assert trainer.use_ddp
-            assert isinstance(trainer.accelerator_backend, NewGPUAccelerator)
+            assert isinstance(trainer.accelerator_backend, GPUAccelerator)
             assert isinstance(trainer.training_type_plugin, DDPPlugin)
             assert isinstance(trainer.training_type_plugin.cluster_environment, TorchElasticEnvironment)
             assert trainer.training_type_plugin.task_idx == 10
@@ -179,7 +181,7 @@ def test_accelerator_choice_ddp2_te(tmpdir):
     class CB(Callback):
         def on_fit_start(self, trainer, pl_module):
             assert trainer.use_ddp2
-            assert isinstance(trainer.accelerator_backend, NewGPUAccelerator)
+            assert isinstance(trainer.accelerator_backend, GPUAccelerator)
             assert isinstance(trainer.training_type_plugin, DDP2Plugin)
             assert isinstance(trainer.training_type_plugin.cluster_environment, TorchElasticEnvironment)
             assert trainer.training_type_plugin.task_idx == 10
@@ -208,7 +210,7 @@ def test_accelerator_choice_ddp_cpu_te(tmpdir):
     class CB(Callback):
         def on_fit_start(self, trainer, pl_module):
             assert trainer.use_ddp
-            assert isinstance(trainer.accelerator_backend, NewCPUAccelerator)
+            assert isinstance(trainer.accelerator_backend, CPUAccelerator)
             assert isinstance(trainer.training_type_plugin, DDPPlugin)
             assert isinstance(trainer.training_type_plugin.cluster_environment, TorchElasticEnvironment)
             assert trainer.training_type_plugin.task_idx == 10
@@ -240,7 +242,7 @@ def test_accelerator_choice_ddp_cpu_slurm(tmpdir):
         def on_fit_start(self, trainer, pl_module):
             assert trainer.use_ddp
             assert trainer.accelerator_connector.is_slurm_managing_tasks
-            assert isinstance(trainer.accelerator_backend, NewCPUAccelerator)
+            assert isinstance(trainer.accelerator_backend, CPUAccelerator)
             assert isinstance(trainer.training_type_plugin, DDPPlugin)
             assert isinstance(trainer.training_type_plugin.cluster_environment, SLURMEnvironment)
             raise SystemExit()
@@ -277,7 +279,7 @@ def test_accelerator_choice_ddp_cpu_custom_cluster(tmpdir):
     class CB(Callback):
         def on_fit_start(self, trainer, pl_module):
             assert trainer.use_ddp
-            assert isinstance(trainer.accelerator_backend, NewCPUAccelerator)
+            assert isinstance(trainer.accelerator_backend, CPUAccelerator)
             assert isinstance(trainer.training_type_plugin, DDPPlugin)
             assert isinstance(trainer.training_type_plugin.cluster_environment, CustomCluster)
             raise SystemExit()
@@ -304,7 +306,7 @@ def test_accelerator_choice_ddp_cpu_custom_cluster(tmpdir):
 })
 @mock.patch('torch.cuda.device_count', return_value=0)
 def test_custom_accelerator(tmpdir):
-    class Accel(NewAccelerator):
+    class Accel(Accelerator):
         pass
 
     class Prec(PrecisionPlugin):
@@ -344,7 +346,7 @@ def test_custom_accelerator(tmpdir):
 def test_dist_backend_accelerator_mapping(tmpdir):
     class CB(Callback):
         def on_fit_start(self, trainer, pl_module):
-            assert isinstance(trainer.accelerator_backend, NewCPUAccelerator)
+            assert isinstance(trainer.accelerator_backend, CPUAccelerator)
             assert isinstance(trainer.training_type_plugin, DDPPlugin)
             raise SystemExit()
 
