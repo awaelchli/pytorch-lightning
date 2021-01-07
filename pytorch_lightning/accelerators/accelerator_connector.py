@@ -191,7 +191,7 @@ class BackendConnector(object):
                     return NativeMixedPrecisionPlugin()
 
             if self.amp_type =='apex':
-                if not APEX_AVAILABLE:
+                if not _APEX_AVAILABLE:
                     rank_zero_warn('You have asked for Apex AMP but you have not installed it yet.'
                                 ' Install apex first using this guide: https://github.com/NVIDIA/apex#linux')
                 else:
