@@ -16,7 +16,6 @@
 
 import os
 from pytorch_lightning.core.memory import ModelSummary
-from pytorch_lightning.accelerators.precision import PrecisionPlugin
 import warnings
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Union
@@ -33,7 +32,6 @@ from pytorch_lightning.core.datamodule import LightningDataModule
 from pytorch_lightning.core.lightning import LightningModule
 from pytorch_lightning.core.step_result import EvalResult, Result
 from pytorch_lightning.loggers import LightningLoggerBase
-from pytorch_lightning.plugins.plugin_connector import PluginConnector
 from pytorch_lightning.profiler import BaseProfiler
 from pytorch_lightning.trainer.callback_hook import TrainerCallbackHookMixin
 from pytorch_lightning.trainer.configuration_validator import ConfigValidator
@@ -81,7 +79,6 @@ from pytorch_lightning.utilities.exceptions import MisconfigurationException
 from pytorch_lightning.utilities.memory import recursive_detach
 from pytorch_lightning.utilities.model_utils import is_overridden
 from pytorch_lightning.trainer.properties import TrainerProperties
-from pytorch_lightning.plugins.plugin_connector import PluginConnector
 from pytorch_lightning.accelerators.accelerator import Accelerator
 
 # warnings to ignore in trainer
