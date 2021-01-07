@@ -22,9 +22,9 @@ from pytorch_lightning import Trainer
 from pytorch_lightning.accelerators.accelerator import Accelerator
 from pytorch_lightning.accelerators.cpu import CPUAccelerator
 from pytorch_lightning.accelerators.gpu import GPUAccelerator
-from pytorch_lightning.accelerators.data_parallel import SingleDevicePlugin, DDPPlugin, DDPSpawnPlugin, DDP2Plugin, \
+from pytorch_lightning.accelerators.plugins import SingleDevicePlugin, DDPPlugin, DDPSpawnPlugin, DDP2Plugin, \
     TrainingTypePlugin
-from pytorch_lightning.accelerators.precision import PrecisionPlugin
+from pytorch_lightning.accelerators.plugins import PrecisionPlugin
 from pytorch_lightning.callbacks import Callback
 from pytorch_lightning.cluster_environments import ClusterEnvironment, SLURMEnvironment, TorchElasticEnvironment
 from tests.base.boring_model import BoringModel
@@ -321,14 +321,8 @@ def test_custom_accelerator(tmpdir):
     )
     trainer = Trainer(
         fast_dev_run=True,
-<<<<<<< HEAD
-        accelerator=Accel(),
-        num_processes=2,
-        callbacks=[CB()]
-=======
         accelerator=accelerator,
         num_processes=1,
->>>>>>> accelerator selection: added cluster_environment plugin
     )
     assert isinstance(trainer.accelerator_backend, Accel)
     assert isinstance(trainer.training_type_plugin, TrainTypePlugin)
