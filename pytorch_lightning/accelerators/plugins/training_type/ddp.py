@@ -9,6 +9,7 @@ import torch
 import torch.distributed as torch_distrib
 
 from pytorch_lightning import _logger as log
+from pytorch_lightning.distributed import LightningDistributed
 from pytorch_lightning.utilities import _HYDRA_AVAILABLE
 from pytorch_lightning.cluster_environments.cluster_environment import ClusterEnvironment
 from pytorch_lightning.accelerators.plugins.training_type.parallel import ParallelPlugin
@@ -45,7 +46,7 @@ class DDPPlugin(ParallelPlugin):
         self.interactive_ddp_procs = []
         self.num_nodes = num_nodes
         self.sync_batchnorm = sync_batchnorm
-        self.dist = LightningDistributedDataParallel()
+        self.dist = LightningDistributed()
         self._ddp_kwargs = kwargs
         self._has_spawned_children = False
         self.task_idx = None

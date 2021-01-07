@@ -321,14 +321,8 @@ def test_custom_accelerator(tmpdir):
     )
     trainer = Trainer(
         fast_dev_run=True,
-<<<<<<< HEAD
-        accelerator=Accel(),
-        num_processes=2,
-        callbacks=[CB()]
-=======
         accelerator=accelerator,
         num_processes=1,
->>>>>>> accelerator selection: added cluster_environment plugin
     )
     assert isinstance(trainer.accelerator_backend, Accel)
     assert isinstance(trainer.training_type_plugin, TrainTypePlugin)
