@@ -3,13 +3,13 @@ import sys
 import subprocess
 from time import sleep
 import numpy as np
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 
 import torch
 import torch.distributed as torch_distrib
 
 from pytorch_lightning import _logger as log
-from pytorch_lightning.utilities import HYDRA_AVAILABLE
+from pytorch_lightning.utilities import _HYDRA_AVAILABLE
 from pytorch_lightning.cluster_environments.cluster_environment import ClusterEnvironment
 from pytorch_lightning.accelerators.plugins.training_type.parallel import ParallelPlugin
 from pytorch_lightning.overrides.data_parallel import LightningDistributedDataParallel
@@ -17,9 +17,16 @@ from pytorch_lightning.utilities.distributed import find_free_network_port, rank
 from pytorch_lightning.utilities.exceptions import MisconfigurationException
 from pytorch_lightning.utilities.seed import seed_everything
 
-if HYDRA_AVAILABLE:
+if _HYDRA_AVAILABLE:
     from hydra.utils import to_absolute_path, get_original_cwd
     from hydra.core.hydra_config import HydraConfig
+
+if torch.distributed.is_available():
+    from torch.distributed import ReduceOp
+else:
+
+    class ReduceOp:
+        SUM = None
 
 
 class DDPPlugin(ParallelPlugin):
@@ -89,7 +96,7 @@ class DDPPlugin(ParallelPlugin):
         os.environ["LOCAL_RANK"] = "0"
 
         # when user is using hydra find the absolute path
-        path_lib = os.path.abspath if not HYDRA_AVAILABLE else to_absolute_path
+        path_lib = os.path.abspath if not _HYDRA_AVAILABLE else to_absolute_path
 
         # pull out the commands used to run the script and resolve the abs file path
         command = sys.argv
@@ -131,7 +138,7 @@ class DDPPlugin(ParallelPlugin):
             # start process
             # if hydra is available and initialized, make sure to set the cwd correctly
             cwd: Optional[str] = None
-            if HYDRA_AVAILABLE:
+            if _HYDRA_AVAILABLE:
                 if HydraConfig.initialized():
                     cwd = get_original_cwd()
             proc = subprocess.Popen(command, env=env_copy, cwd=cwd)

@@ -40,9 +40,9 @@ else:
 try:
     import horovod.torch as hvd
 except (ModuleNotFoundError, ImportError):
-    HOROVOD_AVAILABLE = False
+    _HOROVOD_AVAILABLE = False
 else:
-    HOROVOD_AVAILABLE = True
+    _HOROVOD_AVAILABLE = True
 
 
 class BackendConnector(object):
@@ -371,7 +371,7 @@ class BackendConnector(object):
 
     def check_horovod(self):
         """Raises a `MisconfigurationException` if the Trainer is not configured correctly for Horovod."""
-        if not HOROVOD_AVAILABLE:
+        if not _HOROVOD_AVAILABLE:
             raise MisconfigurationException(
                 'Requested `distributed_backend="horovod"`, but Horovod is not installed.'
                 "Install with \n $HOROVOD_WITH_PYTORCH=1 pip install horovod[pytorch]"
