@@ -7,7 +7,7 @@ class GPUAccelerator(Accelerator):
     def setup(self, trainer, model):
         if "cuda" not in str(self.root_device):
             raise MisconfigurationException(f"Device should be GPU, got {self.root_device} instead")
-        torch.cuda.set_device(self.root_device)
+        # torch.cuda.set_device(self.root_device)
         model.to(self.root_device)
 
         return super().setup(trainer, model)
