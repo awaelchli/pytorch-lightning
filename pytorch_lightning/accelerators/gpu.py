@@ -16,8 +16,9 @@ class GPUAccelerator(Accelerator):
         # clear cache before training
         # use context because of:
         # https://discuss.pytorch.org/t/out-of-memory-when-i-use-torch-cuda-empty-cache/57898
-        with torch.cuda.device(self.root_device):
-            torch.cuda.empty_cache()
+        # with torch.cuda.device(self.root_device):
+        #     torch.cuda.empty_cache()
+        pass
 
     def on_train_end(self):
         # clean up memory
