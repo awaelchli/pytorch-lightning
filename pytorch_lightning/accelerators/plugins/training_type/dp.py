@@ -11,7 +11,7 @@ class DataParallelPlugin(ParallelPlugin):
         super().__init__(parallel_devices=parallel_devices, cluster_environment=None)
 
     def setup(self, model):
-        self._model = LightningDataParallel(model.cpu(), self.parallel_devices)
+        self._model = LightningDataParallel(model.to(self.root_device), self.parallel_devices)
 
     def reduce(self, output, *args, **kwargs):
         if isinstance(output, Result):
@@ -32,6 +32,7 @@ class DataParallelPlugin(ParallelPlugin):
 
     def model_to_device(self):
         # no need to do anything when model is wrapped in torch.nn.DataParallel
+        self._model.to(self.root_device)
         pass
 
     def barrier(self, *args, **kwargs):
