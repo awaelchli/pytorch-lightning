@@ -45,6 +45,7 @@ class LitClassifier(pl.LightningModule):
         return x
 
     def training_step(self, batch, batch_idx):
+        print(self.device, next(self.parameters()).device)
         x, y = batch
         y_hat = self(x)
         loss = F.cross_entropy(y_hat, y)
