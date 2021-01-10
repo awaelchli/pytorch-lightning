@@ -24,7 +24,6 @@ class DataParallelPlugin(ParallelPlugin):
 
     @property
     def root_device(self):
-        print("root device", self.parallel_devices)
         return self.parallel_devices[0]
 
     @property
