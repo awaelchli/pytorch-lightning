@@ -11,7 +11,7 @@ class DataParallelPlugin(ParallelPlugin):
         super().__init__(parallel_devices=parallel_devices, cluster_environment=None)
 
     def setup(self, model):
-        self._model = LightningDataParallel(model, self.parallel_devices)
+        self._model = LightningDataParallel(model.cpu(), self.parallel_devices)
 
     def reduce(self, output, *args, **kwargs):
         if isinstance(output, Result):
