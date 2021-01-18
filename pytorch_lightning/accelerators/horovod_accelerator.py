@@ -146,6 +146,8 @@ class HorovodAccelerator(Accelerator):
 
     def broadcast(self, obj, src=0):
         obj = hvd.broadcast_object(obj, src)
+        for optimizer in self.trainer.optimizers:
+            optimizer.synchronize()
         return obj
 
     def gather_all_tensors(self, result: Union[torch.Tensor], group: Optional[Any] = None):
