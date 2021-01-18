@@ -141,6 +141,7 @@ def test_horovod_apex(tmpdir):
         accelerator='horovod',
         amp_backend='apex',
         precision=16,
+        enable_pl_optimizer=False,
     )
     _run_horovod(trainer_options, on_gpu=True)
 
