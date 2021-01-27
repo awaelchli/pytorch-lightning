@@ -198,6 +198,9 @@ def test_amp_with_apex(tmpdir):
             lr_scheduler2 = optim.lr_scheduler.StepLR(optimizer2, 1, gamma=0.1)
             return [optimizer1, optimizer2], [lr_scheduler1, lr_scheduler2]
 
+        def training_step(self, batch, batch_idx, optimizer_idx):
+            return super().training_step(batch, batch_idx)
+
     model = CustomModel()
 
     trainer = Trainer(
