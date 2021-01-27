@@ -190,8 +190,7 @@ def test_amp_without_apex(tmpdir):
 def test_amp_with_apex(tmpdir):
     """Check calling apex scaling in training."""
 
-    # TODO: switch to BoringModel after fixing #5642
-    class CustomModel(EvalModelTemplate):
+    class CustomModel(BoringModel):
         def configure_optimizers(self):
             optimizer1 = optim.Adam(self.parameters(), lr=0.01)
             optimizer2 = optim.SGD(self.parameters(), lr=0.01)
