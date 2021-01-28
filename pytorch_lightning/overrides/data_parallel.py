@@ -84,7 +84,7 @@ class _LightningModuleWrapperBase(torch.nn.Module):
 
     def forward(self, *inputs, **kwargs):
         running_stage = self.module.running_stage
-        print(running_stage)
+        
         if running_stage == RunningStage.TRAINING:
             output = self.module.training_step(*inputs, **kwargs)
             warn_if_output_is_none(output, "training_step")
