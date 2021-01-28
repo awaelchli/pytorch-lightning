@@ -112,6 +112,8 @@ def _eval_model_template_run_prediction(trained_model, dataloader, dp=False, min
     if dp:
         with torch.no_grad():
             output = trained_model(batch, 0)
+            print(output.keys())
+            print(output.values())
             acc = output['val_acc']
         acc = torch.mean(acc).item()
 
