@@ -38,7 +38,7 @@ class ValidationStepVariations(ABC):
         labels_hat = torch.argmax(y_hat, dim=1)
         val_acc = torch.sum(y == labels_hat).item() / (len(y) * 1.0)
         val_acc = torch.tensor(val_acc).type_as(x)
-
+        print("in val step, ", self.running_stage)
         output = OrderedDict({
             'val_loss': loss_val,
             'val_acc': val_acc,

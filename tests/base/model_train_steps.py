@@ -42,6 +42,8 @@ class TrainingStepVariations(ABC):
         if batch_idx % 2 == 0:
             log_train = log_train.item()
 
+        print("in train step, ", self.running_stage)
+
         output = OrderedDict(
             {
                 'loss': loss_train,
