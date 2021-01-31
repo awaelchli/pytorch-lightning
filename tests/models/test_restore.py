@@ -397,10 +397,13 @@ def test_dp_resume(tmpdir):
         # if model and state loaded correctly, predictions will be good even though we
         # haven't trained with the new loaded model
         dp_model = new_trainer.model
+        print("SETTING EVAL MODE")
         dp_model.eval()
+        print("SETTING RUNNIN GSTAGE")
         dp_model.module.running_stage = RunningStage.EVALUATING
 
         dataloader = trainer.train_dataloader
+        print("RUN PREDICTION GSTAGE")
         tpipes.run_prediction(dp_model, dataloader, dp=True)
 
     # new model
