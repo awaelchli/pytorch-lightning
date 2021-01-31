@@ -85,6 +85,7 @@ class LightningDataParallel(DataParallel):
 
             running_stage = self.module.running_stage
 
+            print("STAGE in DP is ", running_stage)
             if running_stage == RunningStage.TRAINING:
                 return self.module.training_step(*inputs[0], **kwargs[0])
 
@@ -292,6 +293,7 @@ def parallel_apply(
                     input = (input, )
 
                 module = module.to(device)
+                print("STAGE worker is", module.running_stage)
 
                 # ---------------
                 # CHANGE

@@ -27,6 +27,7 @@ class ValidationStepVariations(ABC):
         :param batch:
         :return:
         """
+        print("STAGE in val step is", self.running_stage)
         self.validation_step_called = True
         x, y = batch
         x = x.view(x.size(0), -1)

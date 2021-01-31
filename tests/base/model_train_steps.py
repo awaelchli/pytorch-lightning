@@ -29,6 +29,8 @@ class TrainingStepVariations(ABC):
         """Lightning calls this inside the training loop"""
         self.training_step_called = True
 
+        print("STAGE in train step is", self.running_stage)
+
         # forward pass
         x, y = batch
         x = x.view(x.size(0), -1)
