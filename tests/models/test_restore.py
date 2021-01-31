@@ -402,7 +402,7 @@ def test_dp_resume(tmpdir):
         print("SETTING RUNNIN GSTAGE")
         new_trainer._running_stage = RunningStage.EVALUATING
         # dp_model.module.running_stage = RunningStage.EVALUATING
-        print("STAGE IS NOW", dp_model.module.running_stage)
+        print("STAGE IS NOW", dp_model.module.module.running_stage)
 
         dataloader = trainer.train_dataloader
         print("RUN PREDICTION GSTAGE")
