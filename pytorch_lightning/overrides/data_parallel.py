@@ -124,7 +124,7 @@ class LightningParallelModule(_LightningModuleWrapperBase):
         super().__init__(pl_module)
 
     def forward(self, *inputs, **kwargs):
-        output = super()(*inputs, **kwargs)
+        output = super().forward(*inputs, **kwargs)
         output = apply_to_collection(
             output,
             dtype=numbers.Number,
