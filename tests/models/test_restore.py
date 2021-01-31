@@ -362,7 +362,12 @@ def test_dp_resume(tmpdir):
     # fit model
     trainer = Trainer(**trainer_options)
     trainer.is_slurm_managing_tasks = True
+
+    print("FIRST FIT")
+
     trainer.fit(model)
+
+    print("END FIRST FIT")
 
     # track epoch before saving. Increment since we finished the current epoch, don't want to rerun
     real_global_epoch = trainer.current_epoch + 1
@@ -401,9 +406,11 @@ def test_dp_resume(tmpdir):
     # new model
     model = EvalModelTemplate(**hparams)
     model.on_train_start = assert_good_acc
-
+    print("SECOND FIT")
     # fit new model which should load hpc weights
     new_trainer.fit(model)
+
+    print("END SECOND FIT")
 
     # test freeze on gpu
     model.freeze()
