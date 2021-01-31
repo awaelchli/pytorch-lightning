@@ -400,7 +400,8 @@ def test_dp_resume(tmpdir):
         print("SETTING EVAL MODE")
         dp_model.eval()
         print("SETTING RUNNIN GSTAGE")
-        dp_model.module.running_stage = RunningStage.EVALUATING
+        new_trainer._running_stage = RunningStage.EVALUATING
+        # dp_model.module.running_stage = RunningStage.EVALUATING
         print("STAGE IS NOW", dp_model.module.running_stage)
 
         dataloader = trainer.train_dataloader
