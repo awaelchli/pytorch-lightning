@@ -103,7 +103,6 @@ class LightningModule(
         self._running_manual_backward = False
         self._current_hook_fx_name = None
         self._current_dataloader_idx = None
-        self.running_stage = None
         self._automatic_optimization: bool = True
 
     def optimizers(self, use_pl_optimizer: bool = True) -> Union[Optimizer, List[Optimizer], List[LightningOptimizer]]:
@@ -162,6 +161,10 @@ class LightningModule(
     @automatic_optimization.setter
     def automatic_optimization(self, automatic_optimization: bool) -> None:
         self._automatic_optimization = automatic_optimization
+
+    @property
+    def running_stage(self):
+        return self.trainer._running_stage if self.trainer else None
 
     def print(self, *args, **kwargs) -> None:
         r"""

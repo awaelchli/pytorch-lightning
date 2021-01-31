@@ -509,7 +509,7 @@ class Trainer(
 
         if stage is None:
             self._running_stage = stage
-            model_ref.running_stage = stage
+            # model_ref.running_stage = stage
             return
 
         # todo: clean up this routing mess.
@@ -519,11 +519,11 @@ class Trainer(
         # WARNING: With predicting,
         # trainer _running_state should be RunningStage.TESTING
         # however, the model running_stage should be RunningStage.PREDICTING or None
-        if model_ref is not None:
-            if self._predicting:
-                model_ref.running_stage = RunningStage.PREDICTING
-            else:
-                model_ref.running_stage = stage
+         #if model_ref is not None:
+          #  if self._predicting:
+           #     model_ref.running_stage = RunningStage.PREDICTING
+            #else:
+             #   model_ref.running_stage = stage
 
         self._running_stage = stage
 
