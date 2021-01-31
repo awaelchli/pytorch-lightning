@@ -136,10 +136,13 @@ class DataParallelAccelerator(Accelerator):
         return self._step(args)
 
     def training_step_end(self, output):
+        print("train step reducing", output)
         if isinstance(output, Result):
             output.dp_reduce()
         elif isinstance(output, torch.Tensor):
             output = output.mean()
+
+        print("train step reduced",  output)
         return output
 
     def validation_step_end(self, output):
