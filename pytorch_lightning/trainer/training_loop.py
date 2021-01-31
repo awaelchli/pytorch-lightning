@@ -351,9 +351,13 @@ class TrainLoop:
 
             training_step_output = self.trainer.call_hook("training_step_end", training_step_output)
 
+            print("training loop train_step_end output", type(training_step_output))
+
             training_step_output_for_epoch_end, training_step_output = self._process_training_step_output(
                 training_step_output, split_batch
             )
+            print("training lo§p train_step_end processed", type(training_step_output), training_step_output)
+
             is_result_obj = isinstance(training_step_output, Result)
 
             if training_step_output_for_epoch_end is None:
