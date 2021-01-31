@@ -346,7 +346,7 @@ def test_dp_resume(tmpdir):
     hparams = EvalModelTemplate.get_default_hparams()
     model = EvalModelTemplate(**hparams)
 
-    trainer_options = dict(max_epochs=1, gpus=2, accelerator='dp', default_root_dir=tmpdir)
+    trainer_options = dict(max_steps=1, gpus=2, accelerator='dp', default_root_dir=tmpdir)
 
     # get logger
     logger = tutils.get_default_logger(tmpdir)
