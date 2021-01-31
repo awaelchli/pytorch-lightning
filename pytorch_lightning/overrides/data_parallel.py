@@ -86,12 +86,14 @@ class _LightningModuleWrapperBase(torch.nn.Module):
         running_stage = self.module.running_stage
 
         if running_stage == RunningStage.TRAINING:
+            print("entering train_step","training mode:",self.training)
             output = self.module.training_step(*inputs, **kwargs)
             warn_if_output_is_none(output, "training_step")
         elif running_stage == RunningStage.TESTING:
             output = self.module.test_step(*inputs, **kwargs)
             warn_if_output_is_none(output, "test_step")
         elif running_stage == RunningStage.EVALUATING:
+            print("entering val_step", "training mode:", self.training)
             output = self.module.validation_step(*inputs, **kwargs)
             warn_if_output_is_none(output, "validation_step")
         else:
